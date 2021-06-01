@@ -2,22 +2,25 @@ import { style } from '@vanilla-extract/css'
 
 export const one = style({
   background: 'red',
-  selectors: {
-    ['&.two']: {
-      backgroundColor: 'purple'
-    }
-  }
+})
+
+export const two = style({
+  color: 'blue'
 })
 
 export const three = style({
-  background: 'blue'
+  selectors: {
+    [`${two}&`]: {
+      backgroundColor: 'purple'
+    },
+  }
 })
 
-export const four = style({
+export const five = style({
   selectors: {
-    [`${three} &`]: {
-      background: 'purple',
-    }
-  },
+    [`.four &`]: {
+      padding: '16px'
+    },
+  }
 })
 

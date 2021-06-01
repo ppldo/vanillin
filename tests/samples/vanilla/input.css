@@ -2,6 +2,10 @@
   background: red;
 }
 
+.two {
+  color: blue;
+}
+
 .two.three {
   background-color: purple;
 }
