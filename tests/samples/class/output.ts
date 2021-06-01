@@ -2,15 +2,9 @@ import { style } from '@vanilla-extract/css'
 
 export const one = style({
   background: 'red',
-  ':hover': {
-    backgroundColor: 'purple'
-  }
-})
-
-export const two = style({
   selectors: {
-    [`${one}&`]: {
-      backgroundColor: 'green'
+    ['.two']: {
+      backgroundColor: 'purple'
     }
   }
 })
@@ -22,7 +16,7 @@ export const three = style({
 export const four = style({
   selectors: {
     [`${three} &`]: {
-      background: 'purple'
+      background: 'purple',
     }
   },
 })

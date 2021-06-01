@@ -1,42 +1,16 @@
 {
+  "include": ["./"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
-    "baseUrl": ".", // This must be specified if "paths" is.
-    "paths": {
-      "/*": [
-        "src/*"
-      ],
-      "*": [
-        "typings/*",
-        "*"
-      ]
-    },
     "noEmit": true,
-    "incremental": true,
-    "isolatedModules": true,
-    "allowSyntheticDefaultImports": true,
     "module": "esNext",
     "target": "es6",
     "sourceMap": true,
-    "experimentalDecorators": true,
     "moduleResolution": "node",
-    "noUnusedLocals": false,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "skipLibCheck": true,
-    "noImplicitThis": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "jsx": "preserve",
+    "esModuleInterop": true,
     "lib": [
       "es2019",
       "dom"
     ]
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
 }

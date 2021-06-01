@@ -1,7 +1,13 @@
-const postcss = require('postcss')
+import postcss from 'postcss'
 import fs from 'fs'
 
-import {plugin} from '../index'
+import path from 'path'
+
+import {plugin} from '../src'
+
+function getDirPath(name: string) {
+  return path.resolve(__dirname, name)
+}
 
 async function run (input, output, opts = { }) {
   let result = await postcss([plugin(opts)]).process(input, { from: undefined })
@@ -10,9 +16,9 @@ async function run (input, output, opts = { }) {
 }
 
 describe('test files', () => {
-  it.each(fs.readdirSync('./samples'))('%s', async (title) => {
-    const input = fs.readFileSync(`./samples/${title}/input.css`,{encoding: 'utf-8'})
-    const output = fs.readFileSync(`./samples/${title}/output.ts`,{encoding: 'utf-8'})
+  it.each(fs.readdirSync(getDirPath('./samples')))('%s', async (title) => {
+    const input = fs.readFileSync(getDirPath(`./samples/${title}/input.css`),{encoding: 'utf-8'})
+    const output = fs.readFileSync(getDirPath(`./samples/${title}/output.ts`),{encoding: 'utf-8'})
     await run(input, output)
   })
 })

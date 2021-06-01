@@ -3,7 +3,7 @@ import { style } from '@vanilla-extract/css'
 export const one = style({
   background: 'red',
   selectors: {
-    ['.two']: {
+    ['&.two']: {
       backgroundColor: 'purple'
     }
   }

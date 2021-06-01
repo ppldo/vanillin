@@ -2,4 +2,48 @@
   background: red;
 }
 
+.one.two {
+  background-color: purple;
+}
 
+.one .two {
+  padding: 16px;
+}
+
+.one .two .three {
+  margin: 10px;
+}
+
+.gallery-item::before {
+  content: '';
+  background-color: grey;
+}
+
+.gallery-item:after {
+  content: '';
+  background-color: darkgray;
+}
+
+.one:hover {
+  background-color: red;
+}
+
+.one > .two {
+  background-color: green;
+}
+
+.one > .two:hover {
+  background-color: yellow;
+}
+
+.one + .two {
+  padding: 16px 8px;
+}
+
+.one ~ .two {
+  padding: 8px;
+}
+
+.one + .two > .three {
+  margin: 10px;
+}

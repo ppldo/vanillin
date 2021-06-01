@@ -3,16 +3,34 @@ a {
   background-color: grey;
 }
 
-body {
+body a{
   background-color: white;
 }
 
-.test-dash:hover {
+body article p{
   color: green;
 }
 
-.one .two {
+p:hover {
   color: purple;
 }
 
-/*comment*/
+article > p {
+  padding: 16px;
+}
+
+article > p:hover {
+  background-color: blue;
+}
+
+p + img {
+  margin: 10px;
+}
+
+p ~ img {
+  margin: 12px 6px;
+}
+
+p + img > a {
+  color: red;
+}
