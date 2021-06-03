@@ -1,9 +1,6 @@
-.one {
-  background: red;
-}
-
+.one,
 .two {
-  color: blue;
+  background: red;
 }
 
 .two.three {

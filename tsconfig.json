@@ -1,16 +1,22 @@
 {
-  "include": ["./"],
-  "exclude": ["node_modules"],
+  "include": ["./src/bin/vanillin.ts"],
+  "exclude": ["node_modules", "./tests/samples/"],
   "compilerOptions": {
-    "noEmit": true,
-    "module": "esNext",
-    "target": "es6",
+    "outDir": "./dist",
+    "noEmit": false,
+    "module": "commonjs",
+    "target": "es2019",
     "sourceMap": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "lib": [
       "es2019",
       "dom"
-    ]
-  },
+    ],
+    "strict": true,
+
+    "noUnusedLocals": true,                   /* Report errors on unused locals. */
+    "noImplicitReturns": true,                /* Report error when not all code paths in function return a value. */
+    "noFallthroughCasesInSwitch": true,       /* Report errors for fallthrough cases in switch statement. */
+  }
 }

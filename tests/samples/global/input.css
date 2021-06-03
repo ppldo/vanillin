@@ -34,3 +34,11 @@ p ~ img {
 p + img > a {
   color: red;
 }
+
+.c {
+  flex: 1;
+}
+
+p + .c > a {
+  color: red;
+}
