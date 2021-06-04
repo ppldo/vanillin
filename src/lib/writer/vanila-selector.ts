@@ -1,11 +1,13 @@
 import ts, { factory } from 'typescript'
 
 class SelectorText {
-    constructor(public readonly text: string) {}
+    constructor(public readonly text: string) {
+    }
 }
 
 class SelectorVar {
-    constructor(public readonly varName: string) {}
+    constructor(public readonly varName: string) {
+    }
 }
 
 export class VanillaSelectorMgr {
@@ -13,10 +15,12 @@ export class VanillaSelectorMgr {
 
     // добавление ссылки на внешнюю переменную
     public pushVar(s: string): void {
+      this.parts.push(new SelectorVar(s))
     }
 
     // добавление ноды селектора as-is (не reach элемент)
     public pushText(s: string): void {
+      this.parts.push(new SelectorText(s))
     }
 
     public serialize(): string {
@@ -28,6 +32,12 @@ export class VanillaSelectorMgr {
     }
 
     public isSelfOnly(): boolean {
+      if (this.parts.length !== 1)
+        return false
+      const onlyPart = this.parts[0]
+      if (!(onlyPart instanceof SelectorText))
+        return false
+      return onlyPart.text === '&'
     }
 
     public make(): ts.Expression {

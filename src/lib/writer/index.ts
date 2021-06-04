@@ -1,6 +1,7 @@
 import ts, { factory } from 'typescript'
 
 import { VanillaSelectorMgr } from './vanila-selector'
+import camelCase from 'camelcase'
 export { VanillaSelectorMgr }
 
 type Style = Record<string, string | number>
@@ -45,6 +46,16 @@ class CSSPropsAstMaker {
     // Возвращает AST содержащий:
     // margin: 0
     public makePropsAst(): ts.ObjectLiteralElementLike[] {
+      let result = []
+      for (const [prop, value] of Object.entries(this.s)) {
+        result.push(
+          ts.factory.createPropertyAssignment(
+            ts.factory.createIdentifier(prop),
+            ts.factory.createNumericLiteral(value)
+          )
+        )
+      }
+      return result
     }
 
     // Возвращает AST содержащий:
@@ -52,6 +63,10 @@ class CSSPropsAstMaker {
     //   margin: 0
     // }
     public makeObjectAst(): ts.ObjectLiteralExpression {
+      return ts.factory.createObjectLiteralExpression(
+        this.makePropsAst(),
+        true
+      )
     }
 }
 
