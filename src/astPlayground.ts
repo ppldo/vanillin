@@ -35,11 +35,10 @@ function makeStmt(): ts.Statement {
 
 
 const printer = ts.createPrinter()
-const sourceFile: ts.SourceFile = 
+const sourceFile: ts.SourceFile =
     ts.createSourceFile('test.ts', '', ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 const result = printer.printNode(
     ts.EmitHint.Unspecified,
     makeStmt(),
     sourceFile
 );
-console.warn(result);

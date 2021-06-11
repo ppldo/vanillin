@@ -50,39 +50,27 @@ export const vanillaSelectorParser = selectorParser<TSPResult>(function (selecto
 
   selectors.each(s => {
     for (const node of s.nodes) {
-      switch (node.type) {
-        case 'class': {
-          const vn = camelCase(node.value)
-          if (node === targetClassNode) {
-            vanillaSelector.pushText('&')
-            varName = vn
-          }
-          else {
-            vanillaSelector.pushVar(vn)
-            deps.add(vn)
-          }
-          break
+      if (node.type === 'class') {
+        const vn = camelCase(node.value)
+        if (node === targetClassNode) {
+          vanillaSelector.pushText('&')
+          varName = vn
         }
-        case 'combinator':
-        case 'pseudo':
-        case 'comment': {
+        else {
+          vanillaSelector.pushVar(vn)
+          deps.add(vn)
+        }
+      } else {
+        if (typeof node.value === 'string') {
           vanillaSelector.pushText(node.value)
-          break
         }
       }
     }
   })
   if (isGlobalStyle) {
-    result = {
-      vanillaSelector,
-      deps
-    }
+    result = new GlobalSelector(vanillaSelector, deps)
   } else {
-    result = {
-      vanillaSelector,
-      deps,
-      varName
-    }
+    result = new RegularSelector(vanillaSelector, deps, varName)
   }
   return result
 })

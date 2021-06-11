@@ -1,11 +1,34 @@
 import { style } from "@vanilla-extract/css";
-/**
- * TODO: this variable has circular dependencies, please fix it yourself! */
+export const empty1 = style({});
+export const empty2 = style({});
+export const one = style({
+    selectors: { [`${empty1}&`]: { background: "red" } }
+});
 export const two = style({
-    selectors: { [`${one}&`]: { background: "red" } }
+    selectors: { [`${empty2} ${one} &`]: { background: "blue" } }
+});
+export const myfor = style({
+    flex: "0 0 auto",
+    color: "purple"
+});
+export const five = style({
+    selectors: { ["&:hover"]: { color: "pink" } }
+});
+export const three = style({
+    selectors: { [`${five}>${for} &`]: { color: "green" } }
 });
 /**
  * TODO: this variable has circular dependencies, please fix it yourself! */
-export const one = style({
-    selectors: { [`${two}&`]: { background: "blue" } }
+export const crclA = style({
+    selectors: { [`${crclB} &`]: { minWidth: "200px", width: "200px" } }
+});
+/**
+ * TODO: this variable has circular dependencies, please fix it yourself! */
+export const crclB = style({
+    selectors: { [`${crclC}>&`]: { height: "100px", content: "''", background: "grey" } }
+});
+/**
+ * TODO: this variable has circular dependencies, please fix it yourself! */
+export const crclC = style({
+    selectors: { [`${crclA}+&`]: { overflow: "hidden", position: "absolute", left: "-12px" } }
 });

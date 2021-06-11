@@ -1,4 +1,4 @@
-import ts, { factory } from 'typescript'
+import ts, {factory} from 'typescript'
 
 import { VanillaSelectorMgr } from './vanila-selector'
 import camelCase from 'camelcase'
@@ -49,9 +49,11 @@ class CSSPropsAstMaker {
       let result = []
       for (const [prop, value] of Object.entries(this.s)) {
         result.push(
-          ts.factory.createPropertyAssignment(
-            ts.factory.createIdentifier(prop),
-            ts.factory.createNumericLiteral(value)
+          factory.createPropertyAssignment(
+            factory.createIdentifier(prop),
+            (typeof value === 'string') ?
+              factory.createStringLiteral(value) :
+              factory.createNumericLiteral(value)
           )
         )
       }
@@ -63,9 +65,8 @@ class CSSPropsAstMaker {
     //   margin: 0
     // }
     public makeObjectAst(): ts.ObjectLiteralExpression {
-      return ts.factory.createObjectLiteralExpression(
-        this.makePropsAst(),
-        true
+      return factory.createObjectLiteralExpression(
+        this.makePropsAst()
       )
     }
 }
@@ -79,7 +80,19 @@ class GlobalStyleAstMaker {
     // globalStyle('html, body', {
     //     margin: 0
     // });
+
     public make(): ts.ExpressionStatement {
+      const cssProps = new CSSPropsAstMaker(this.globalStyle.style)
+      return (
+        factory.createExpressionStatement(factory.createCallExpression(
+          factory.createIdentifier("globalStyle"),
+          undefined,
+          [
+            this.globalStyle.vanillaSelector.make(),
+            cssProps.makeObjectAst()
+          ]
+        ))
+      )
     }
 }
 
@@ -140,6 +153,10 @@ class VariableNameAstMaker {
     // Возвращает AST содержащий:
     // myVar
     public make(): ts.Identifier {
+      let varName = camelCase(this.varName)
+      if (VariableNameAstMaker.keywordsList.includes(this.varName))
+        varName = `my${camelCase(this.varName)}`
+      return factory.createIdentifier(varName)
     }
 }
 
@@ -157,7 +174,38 @@ class RegularStyleAstMaker {
     //         }
     //     }
     // }
+
     private createStyleRuleAst(): ts.Expression {
+      if (this.regularStyle.selectorConfs.some(conf => !conf.vanillaSelector.isSelfOnly())) {
+        return factory.createObjectLiteralExpression(
+          [
+            ...this.regularStyle.selectorConfs.filter(s => s.vanillaSelector.isSelfOnly()).flatMap((s) => {
+              return new CSSPropsAstMaker(s.style).makePropsAst()
+            }),
+            factory.createPropertyAssignment(
+              factory.createIdentifier("selectors"),
+              factory.createObjectLiteralExpression(
+                [...this.regularStyle.selectorConfs.filter(s => !s.vanillaSelector.isSelfOnly()).map(s => {
+                  return factory.createPropertyAssignment(
+                    factory.createComputedPropertyName(s.vanillaSelector.make()),
+                    new CSSPropsAstMaker(s.style).makeObjectAst(),
+                  )
+                })],
+              )
+            )
+          ],
+          true
+        )
+      } else {
+        return factory.createObjectLiteralExpression(
+          [
+            ...this.regularStyle.selectorConfs.filter(s => s.vanillaSelector.isSelfOnly()).flatMap((s) => {
+              return new CSSPropsAstMaker(s.style).makePropsAst()
+            }),
+          ],
+          true
+        )
+      }
     }
 
     // Возвращает AST содержащий:
@@ -170,6 +218,24 @@ class RegularStyleAstMaker {
     //     }
     // })
     public make(): ts.VariableStatement {
+      return (
+        factory.createVariableStatement(
+          [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
+          factory.createVariableDeclarationList(
+            [factory.createVariableDeclaration(
+              new VariableNameAstMaker(this.regularStyle.varName).make(),
+              undefined,
+              undefined,
+              factory.createCallExpression(
+                factory.createIdentifier("style"),
+                undefined,
+                [this.createStyleRuleAst()]
+              )
+            )],
+            ts.NodeFlags.Const
+          )
+        )
+      )
     }
 }
 
@@ -192,21 +258,104 @@ export class KeyframeAstMaker {
     ) {}
 
     private makeKeyFrameConfigAst(): ts.ObjectLiteralExpression {
+      return factory.createObjectLiteralExpression(
+        [...this.keyFrame.data.entries()].map(([literal, style]) => {
+          return factory.createPropertyAssignment(
+            factory.createStringLiteral(literal),
+            new CSSPropsAstMaker(style).makeObjectAst()
+          )
+        })
+      )
     }
 
     public make(): ts.VariableStatement {
+      return factory.createVariableStatement(
+        undefined,
+        factory.createVariableDeclarationList(
+          [factory.createVariableDeclaration(
+            factory.createIdentifier(this.keyFrame.varName),
+            undefined,
+            undefined,
+            factory.createCallExpression(
+              factory.createIdentifier("keyframes"),
+              undefined,
+              [this.makeKeyFrameConfigAst()]
+            )
+          )],
+          ts.NodeFlags.Const
+        )
+      )
     }
 }
 
 export function expressionsToTSString(exprs: Array<IExpression>): string {
-    const tsNodes: ts.Node[] = []
-    // TODO: tsNodes
-
-    const result = ts.createPrinter().printList(
-        ts.ListFormat.SourceFileStatements,
-        ts.createNodeArray(tsNodes),
-        ts.createSourceFile('source.ts', '', ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS)
+  const tsNodes: ts.Node[] = []
+  const imports: Array<string> = []
+  for (const e of exprs) {
+    switch (e.type) {
+      case StatementEnum.REGULAR: {
+        if (!imports.includes('style'))
+          imports.push('style')
+        break
+      }
+      case StatementEnum.GLOBAL: {
+        if (!imports.includes('globalStyle'))
+          imports.push('globalStyle')
+        break
+      }
+      case StatementEnum.KEYFRAME: {
+        if (!imports.includes('keyframes'))
+          imports.push('keyframes')
+        break
+      }
+    }
+  }
+  tsNodes.push(
+    factory.createImportDeclaration(
+      undefined,
+      undefined,
+      factory.createImportClause(
+        false,
+        undefined,
+        factory.createNamedImports([
+          ...imports.map(i => {
+            return factory.createImportSpecifier(
+              undefined,
+              factory.createIdentifier(i)
+            )
+          })
+        ])
+      ),
+      factory.createStringLiteral("@vanilla-extract/css")
     )
+  )
 
-    return result
+  for (const e of exprs) {
+    switch (e.type) {
+      case StatementEnum.REGULAR: {
+        tsNodes.push(new RegularStyleAstMaker(e).make())
+        break
+      }
+      case StatementEnum.GLOBAL: {
+        tsNodes.push(new GlobalStyleAstMaker(e).make())
+        break
+      }
+      case StatementEnum.KEYFRAME: {
+        tsNodes.push(new KeyframeAstMaker(e).make())
+        break
+      }
+      case StatementEnum.COMMENT: {
+        tsNodes.push(new CommentAstMaker(e).make())
+        break
+      }
+    }
+  }
+
+  const result = ts.createPrinter().printList(
+      ts.ListFormat.SourceFileStatements,
+      ts.createNodeArray(tsNodes),
+      ts.createSourceFile('source.ts', '', ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS)
+  )
+
+  return result
 }

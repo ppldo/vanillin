@@ -1,7 +1,37 @@
-.one.two {
+.empty1.one {
   background: red;
 }
 
-.two.one {
+.empty2 .one .two {
   background: blue;
+}
+
+.five > .for .three {
+  color: green;
+}
+
+.for {
+  flex: 0 0 auto;
+  color: purple;
+}
+
+.five:hover {
+  color: pink;
+}
+
+.crclB .crclA {
+  min-width: 200px;
+  width: 200px;
+}
+
+.crclC > .crclB {
+  height: 100px;
+  content: '';
+  background: grey;
+}
+
+.crclA + .crclC {
+  overflow: hidden;
+  position: absolute;
+  left: -12px;
 }

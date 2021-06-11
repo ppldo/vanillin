@@ -49,34 +49,53 @@ export function parseRules(root: Root): IParseRulesResult {
     regularRules: [],
     keyFrames: []
   }
+
   root.each(r => {
     if (r instanceof AtRule) {
       if (r.name === 'keyframes') {
         r.nodes.map(node => {
-          if (node instanceof Rule)
-          result.keyFrames.push({
-            varName: r.params,
-            data: new Map([
-              [node.selector, parseCssProps(node)]
-            ])
-          })
+          if (node instanceof Rule) {
+            if (!result.keyFrames.length) {
+              result.keyFrames.push({
+                varName: r.params,
+                data: new Map([
+                  [node.selector, parseCssProps(node)]
+                ])
+              })
+            } else {
+              for (const keyframe of result.keyFrames) {
+                if (keyframe.varName === r.params) {
+                  keyframe.data.set(node.selector, parseCssProps(node))
+                } else {
+                  result.keyFrames.push({
+                    varName: r.params,
+                    data: new Map([
+                      [node.selector, parseCssProps(node)]
+                    ])
+                  })
+                }
+              }
+            }
+          }
         })
       }
     } else if (r instanceof Rule) {
-      const parsedSelector = vanillaSelectorParser.transformSync(r.selector)
-      if (parsedSelector instanceof GlobalSelector) {
-        result.globalRules.push({
-          vanillaSelector: parsedSelector.vanillaSelector,
-          styles: parseCssProps(r),
-          deps: parsedSelector.deps
-        })
-      } else {
-        result.regularRules.push({
-          vanillaSelector: parsedSelector.vanillaSelector,
-          styles: parseCssProps(r),
-          deps: parsedSelector.deps,
-          varName: camelCase(r.selector)
-        })
+      for (const selector of r.selectors) {
+        const parsedSelector = vanillaSelectorParser.transformSync(selector)
+        if (parsedSelector instanceof GlobalSelector) {
+          result.globalRules.push({
+            vanillaSelector: parsedSelector.vanillaSelector,
+            styles: parseCssProps(r),
+            deps: parsedSelector.deps
+          })
+        } else if (parsedSelector.varName) {
+          result.regularRules.push({
+            vanillaSelector: parsedSelector.vanillaSelector,
+            styles: parseCssProps(r),
+            deps: parsedSelector.deps,
+            varName: camelCase(parsedSelector.varName)
+          })
+        }
       }
     }
   })
