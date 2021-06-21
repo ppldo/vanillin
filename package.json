@@ -1,9 +1,9 @@
 {
   "name": "@ppldo/vanillin",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Converting tool for migrate css modules code base to vanilla-extract.",
   "bin": {
-    "vanillin": "src/cli.ts"
+    "vanillin": "dist/cli.js"
   },
   "keywords": [
     "postcss",
@@ -14,9 +14,11 @@
     "migration"
   ],
   "scripts": {
-    "test": "jest --coverage && eslint ."
+    "test": "jest --coverage",
+    "build": "rm -rf dist && yarn test && tsc",
+    "prepublishOnly": "yarn build"
   },
-  "author": [
+  "authors": [
     "<rapthead@gmail.com>",
     "<hactr013@gmail.com>"
   ],
@@ -24,23 +26,22 @@
   "engines": {
     "node": ">=10.0.0"
   },
-  "peerDependencies": {
-    "postcss": "^8.2.8"
-  },
   "devDependencies": {
     "@types/glob": "^7.1.3",
     "@types/jest": "^26.0.23",
     "@types/lodash": "^4.14.170",
-    "clean-publish": "^2.1.0",
+    "@vanilla-extract/css": "^0.5.1",
     "jest": "^26.6.3",
-    "lint-staged": "^10.5.4",
-    "postcss": "^8.2.8",
-    "simple-git-hooks": "^2.0.2",
     "ts-jest": "^26.5.6",
     "ts-node": "^10.0.0"
   },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
+  "dependencies": {
+    "camelcase": "^6.2.0",
+    "glob": "^7.1.7",
+    "lodash": "^4.17.21",
+    "postcss": "^8.2.8",
+    "postcss-selector-parser": "^6.0.6",
+    "typescript": "^4.2.4"
   },
   "jest": {
     "testEnvironment": "node",
@@ -49,13 +50,5 @@
         "statements": 100
       }
     }
-  },
-  "dependencies": {
-    "@vanilla-extract/css": "^0.5.1",
-    "camelcase": "^6.2.0",
-    "glob": "^7.1.7",
-    "lodash": "^4.17.21",
-    "postcss-selector-parser": "^6.0.6",
-    "typescript": "^4.2.4"
   }
 }
