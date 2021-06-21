@@ -1,8 +1,39 @@
-@keyframes rounding {
-    0% {
-        border-radius: 0;
-    }
-    100% {
-        border-radius: 8px;
-    }
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+.shake {
+  animation-name: shake;
+  animation-duration: 0.5s;
+  transform-origin:50% 50%;
+  animation-timing-function: linear;
+}
+
+@keyframes caret {
+  50% {
+    border-color: transparent;
+  }
+}
+
+.cursor:before {
+  content: '';
+  position: absolute;
+  border-right: solid 1px black;
+  right: 40%;
+  bottom: 10px;
+  height: 21px;
+  animation: caret 1.2s steps(1) infinite;
 }

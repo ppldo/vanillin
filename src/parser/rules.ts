@@ -50,12 +50,14 @@ export function parseRules(root: Root): IParseRulesResult {
     keyFrames: []
   }
 
+  const parsedKeyFrameName: string[] = []
   root.each(r => {
     if (r instanceof AtRule) {
       if (r.name === 'keyframes') {
         r.nodes.map(node => {
           if (node instanceof Rule) {
             if (!result.keyFrames.length) {
+              parsedKeyFrameName.push(r.params)
               result.keyFrames.push({
                 varName: r.params,
                 data: new Map([
@@ -66,7 +68,8 @@ export function parseRules(root: Root): IParseRulesResult {
               for (const keyframe of result.keyFrames) {
                 if (keyframe.varName === r.params) {
                   keyframe.data.set(node.selector, parseCssProps(node))
-                } else {
+                } else if (!parsedKeyFrameName.includes(r.params)) {
+                  parsedKeyFrameName.push(r.params)
                   result.keyFrames.push({
                     varName: r.params,
                     data: new Map([

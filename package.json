@@ -1,7 +1,10 @@
 {
-  "name": "vanillin",
+  "name": "@ppldo/vanillin",
   "version": "0.0.0",
-  "description": "PostCSS plugin to migrate css code base to vanilla-extract",
+  "description": "Converting tool for migrate css modules code base to vanilla-extract.",
+  "bin": {
+    "vanillin": "src/cli.ts"
+  },
   "keywords": [
     "postcss",
     "css",
@@ -13,9 +16,11 @@
   "scripts": {
     "test": "jest --coverage && eslint ."
   },
-  "author": "hactr <hactr013@gmail.com>",
+  "author": [
+    "<rapthead@gmail.com>",
+    "<hactr013@gmail.com>"
+  ],
   "license": "MIT",
-  "repository": "hactrz/postcss-vanilla-extract-migrate",
   "engines": {
     "node": ">=10.0.0"
   },
@@ -23,6 +28,7 @@
     "postcss": "^8.2.8"
   },
   "devDependencies": {
+    "@types/glob": "^7.1.3",
     "@types/jest": "^26.0.23",
     "@types/lodash": "^4.14.170",
     "clean-publish": "^2.1.0",
@@ -47,6 +53,7 @@
   "dependencies": {
     "@vanilla-extract/css": "^0.5.1",
     "camelcase": "^6.2.0",
+    "glob": "^7.1.7",
     "lodash": "^4.17.21",
     "postcss-selector-parser": "^6.0.6",
     "typescript": "^4.2.4"
