@@ -3,7 +3,7 @@ import fs from 'fs'
 
 import path from 'path'
 
-import {vanillin} from '../src/lib'
+import {vanillin} from '../src'
 
 function getDirPath(name: string) {
   return path.resolve(__dirname, name)

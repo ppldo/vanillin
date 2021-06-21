@@ -46,7 +46,7 @@ class CircularJSComment implements IComment {
 
 class KeyframeJSComment implements IComment {
     public readonly type = StatementEnum.COMMENT
-    public readonly comment = 'TODO: keyframes interpolations is not implemented yet, please fix it yourself!'
+    public readonly comment = 'TODO: animation ref is not implemented yet, please fix it yourself!'
 }
 
 class KeyFrame implements IKeyFrame {
