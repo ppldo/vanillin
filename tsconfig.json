@@ -6,7 +6,7 @@
     "noEmit": false,
     "module": "commonjs",
     "target": "es2019",
-    "sourceMap": true,
+    "sourceMap": false,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "lib": [

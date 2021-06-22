@@ -6,11 +6,11 @@
   background: blue;
 }
 
-.five > .for .three {
+.five > .four .three {
   color: green;
 }
 
-.for {
+.four {
   flex: 0 0 auto;
   color: purple;
 }

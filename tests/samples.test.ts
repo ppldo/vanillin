@@ -1,5 +1,6 @@
 import postcss from 'postcss'
 import fs from 'fs'
+import p from 'prettier'
 
 import path from 'path'
 
@@ -9,15 +10,17 @@ function getDirPath(name: string) {
   return path.resolve(__dirname, name)
 }
 
+function makeFile(content: string) {
+    return p.format(content, {parser: 'babel-ts', endOfLine: 'lf'})
+}
+
 async function run (input: string, output: string, title: string, opts = { }) {
     const root = await postcss.parse(input, { from: undefined })
     const vanillinedCss = vanillin(root)
-    try {
-        expect(vanillinedCss+"\n").toEqual(output)
-    } catch (e) {
-        console.warn(vanillinedCss, title)
-        throw e
-    }
+    const generated = makeFile(vanillinedCss)
+    const expected = makeFile(output)
+
+    expect(generated).toEqual(expected)
 }
 
 describe('test files', () => {
