@@ -46,3 +46,7 @@ p + .c > a {
 .d p {
     color: green;
 }
+
+.d a {
+    color: green;
+}

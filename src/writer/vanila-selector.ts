@@ -15,12 +15,18 @@ export class VanillaSelectorMgr {
         return onlyPart === '&'
     }
 
+    private checkLocal<T extends ts.Node>(node: T): T {
+        if (this.parts.includes(':local'))
+            ts.addSyntheticLeadingComment(node, ts.SyntaxKind.SingleLineCommentTrivia, 'TODO :local() pseudo from css modules spec not supported')
+        return node
+    }
+
     public make(): ts.Expression {
         if (this.parts.every(p => typeof p === 'string')) {
             let literal = ''
             for (const part of this.parts)
                 literal += part
-            return factory.createStringLiteral(literal)
+            return this.checkLocal(factory.createStringLiteral(literal))
         }
 
         let head = ''
@@ -55,9 +61,9 @@ export class VanillaSelectorMgr {
                 ),
             )
         }
-        return factory.createTemplateExpression(
+        return this.checkLocal(factory.createTemplateExpression(
             factory.createTemplateHead(head),
             spans,
-        )
+        ))
     }
 }

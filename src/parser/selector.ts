@@ -1,29 +1,31 @@
 import selectorParser, {Selector, ClassName} from 'postcss-selector-parser'
 
-function parseSelectorInner(selector: Selector, targetClassNode?: ClassName): Array<string | { var: string }> {
-    const parts: Array<string | { var: string }> = []
+function parseSelectorInner(selector: Selector): Array<string | {
+    var: string
+    node: ClassName
+}> {
+    const parts: Array<string | { var: string, node: ClassName}> = []
     for (const node of selector.nodes) {
         if (node.type === 'class') {
             const vn = node.value
-            if (node === targetClassNode)
-                parts.push('&')
-            else
-                parts.push({var: vn})
+            parts.push({var: vn, node})
         } else if (node.type === 'pseudo') {
+            if (node.length > 1)
+                throw new Error('???')
             if (node.value === ':global') {
-                if (node.length === 0)
-                    new Error(`selector global switch doesn't supported yet`)
-                if (node.length > 1)
-                    throw new Error('???')
-                node.nodes[0].each(n => void parts.push(n.toString()))
-                continue
+                if (node.length) {
+                    node.nodes[0].each(n => void parts.push(n.toString()))
+                    continue
+                }
+                else {
+                    selector.nodes.slice(selector.nodes.indexOf(node) + 1)
+                        .forEach(n => void parts.push(n.toString()))
+                    break
+                }
             }
             parts.push(node.value)
-            if (node.length > 0) {
-                if (node.length > 1)
-                    throw new Error('???')
+            if (node.length > 0)
                 parts.push('(', ...parseSelectorInner(node.nodes[0]), ')')
-            }
         } else if (typeof node.value === 'string') {
             parts.push(node.toString())
         }
@@ -55,9 +57,16 @@ const vanillaSelectorParser = selectorParser<VanillaSelector>(function (selector
         }
     }
 
+    const parts = parseSelectorInner(selector)
+        .map(p => typeof p === 'string'
+            ? p
+            : p.node === targetClassNode
+                ? '&'
+                : {var: p.var})
+
     return {
-        targetClass: targetClassNode?.value ?? null,
-        parts: parseSelectorInner(selector, targetClassNode),
+        targetClass: parts.includes('&') ? targetClassNode?.value ?? null : null,
+        parts,
     }
 })
 

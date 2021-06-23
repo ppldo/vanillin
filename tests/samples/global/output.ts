@@ -37,3 +37,6 @@ globalStyle(`p + ${c} > a`, {
 globalStyle(`${d} p`, {
     color: "green",
 });
+globalStyle(`${d} a`, {
+    color: "green",
+});

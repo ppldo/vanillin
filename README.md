@@ -157,6 +157,12 @@ find $FOLDER -name "styles.module.css" -exec rm {} \;
 
 All kebab-case class names will be transformed to camelCase, because of js syntax.
 
+:local() pseudo from css modules spec not supported.
+```css
+/*localB and localC will not be local*/
+.localA :global global-b :local(localC) :local .localB {}
+```
+
 **input:**
 
 ```css

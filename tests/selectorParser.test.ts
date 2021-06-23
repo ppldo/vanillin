@@ -21,7 +21,11 @@ describe('selector parser', () => {
             parts: [{var: 'root'}, ' ', '.emoji-mart-emoji', ' ', '#asd', ' ', '.asd', ' ', 'b']
         })
     })
+
     it('parse global switch', function () {
-        expect(() => parseSelector('.localA :global .global-b')).toThrow(`selector global switch doesn't supported yet`)
+        expect(parseSelector('.localA :global .global-b')).toEqual({
+            targetClass: null,
+            parts: [{var: 'localA'}, ' ', ' ', '.global-b']
+        })
     })
 })

@@ -121,6 +121,7 @@ class Mapper {
             if (!existing.has(name)) {
                 result.push(new RegularStyle(name, [], new Set<string>()))
                 empty.add(name)
+                existing.add(name)
             }
         }
         return empty
