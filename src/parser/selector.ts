@@ -10,6 +10,14 @@ function parseSelectorInner(selector: Selector, targetClassNode?: ClassName): Ar
             else
                 parts.push({var: vn})
         } else if (node.type === 'pseudo') {
+            if (node.value === ':global') {
+                if (node.length === 0)
+                    new Error(`selector global switch doesn't supported yet`)
+                if (node.length > 1)
+                    throw new Error('???')
+                node.nodes[0].each(n => void parts.push(n.toString()))
+                continue
+            }
             parts.push(node.value)
             if (node.length > 0) {
                 if (node.length > 1)
