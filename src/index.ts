@@ -13,7 +13,7 @@ import {
     StatementEnum,
     VanillaSelectorMgr,
 } from './writer'
-import {IGlobalRule, IRegularRule, parseRules} from './parser/rules'
+import {VanillaRule, parseRules} from './parser/rules'
 
 class GlobalStyle implements IGlobalStyle {
     public readonly type = StatementEnum.GLOBAL
@@ -61,44 +61,39 @@ class KeyFrame implements IKeyFrame {
     }
 }
 
-function reduceGlobalStyles(rules: IGlobalRule[]): GlobalStyle[] {
-    return ld.chain(rules).groupBy((r) => {
-        return r.vanillaSelector.serialize()
-    }).values().map((globalRules: IGlobalRule[]) => {
+function reduceGlobalStyles(rules: VanillaRule[]): GlobalStyle[] {
+    return ld.chain(rules).groupBy(r => r.selectorTemplate).values().map(globalRules => {
         let allDeps = new Set<string>()
         let allStyles: Style = {}
         for (const globalRule of globalRules) {
             allDeps = new Set([...allDeps, ...globalRule.deps])
             allStyles = {...allStyles, ...globalRule.styles}
         }
-        return new GlobalStyle(globalRules[0].vanillaSelector, allStyles, allDeps)
+        return new GlobalStyle(new VanillaSelectorMgr(globalRules[0].parts), allStyles, allDeps)
     }).value()
 }
 
-function reduceRegularStyles(rules: IRegularRule[]): RegularStyle[] {
+function reduceRegularStyles(rules: VanillaRule[]): RegularStyle[] {
     return ld.chain(rules).groupBy((r) => {
-        return r.varName
-    }).values().map((regularRulesByVar: IRegularRule[]) => {
+        return r.targetClass!
+    }).values().map((regularRulesByVar) => {
         let allDeps = new Set<string>()
         for (const r of regularRulesByVar) {
             allDeps = new Set([...allDeps, ...r.deps])
         }
         const selectorConfs: ISelectorConf[] = ld.chain(regularRulesByVar)
-            .groupBy(r => {
-                return r.vanillaSelector.serialize()
-            })
-            .values()
-            .map((regularRulesBySelector: IRegularRule[]) => {
+            .groupBy(r => r.selectorTemplate)
+            .values().map(regularRulesBySelector => {
                 let style: Style = {}
                 for (const r of regularRulesBySelector) {
                     style = {...style, ...r.styles}
                 }
                 return {
-                    vanillaSelector: regularRulesBySelector[0].vanillaSelector,
+                    vanillaSelector: new VanillaSelectorMgr(regularRulesBySelector[0].parts),
                     style,
                 }
             }).value()
-        return new RegularStyle(regularRulesByVar[0].varName, selectorConfs, allDeps)
+        return new RegularStyle(regularRulesByVar[0].targetClass!, selectorConfs, allDeps)
     }).value()
 }
 
@@ -110,26 +105,25 @@ class Mapper {
     ) {
     }
 
-    private getEmptyVarNames(): Set<string> {
-        const allVar = new Set<string>()
-        for (const style of this.regularStyles)
-            allVar.add(style.varName)
-        return allVar
-    }
-
     private addEmptyRegularStyles(result: Array<IExpression>): Set<string> {
         let allDeps: Array<string> = []
-        const emptyRegularStyles = new Set<string>()
+        const existing = new Set<string>()
+
         for (const style of this.regularStyles) {
+            existing.add(style.varName)
             allDeps.push(...style.deps.values())
         }
-        for (const d of allDeps) {
-            if (!this.getEmptyVarNames().has(d))
-                emptyRegularStyles.add(d)
+        for (const style of this.globalStyles) {
+            allDeps.push(...style.deps.values())
         }
-        for (const name of emptyRegularStyles)
-            result.push(new RegularStyle(name, [], new Set<string>()))
-        return emptyRegularStyles
+        const empty = new Set<string>()
+        for (const name of allDeps) {
+            if (!existing.has(name)) {
+                result.push(new RegularStyle(name, [], new Set<string>()))
+                empty.add(name)
+            }
+        }
+        return empty
     }
 
     private addRegularStyles(result: Array<IExpression>, processedVarNames: Set<string>) {

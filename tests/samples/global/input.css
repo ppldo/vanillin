@@ -42,3 +42,7 @@ p + img > a {
 p + .c > a {
   color: red;
 }
+
+.d p {
+    color: green;
+}

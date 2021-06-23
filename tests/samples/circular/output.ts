@@ -28,7 +28,7 @@ export const five = style({
 })
 export const three = style({
     selectors: {
-        [`${five}>${four} &`]: {
+        [`${five} > ${four} &`]: {
             color: 'green',
         },
     },
@@ -45,7 +45,7 @@ export const crclA = style({
 //TODO: this variable has circular dependencies, please fix it yourself!
 export const crclB = style({
     selectors: {
-        [`${crclC}>&`]: {
+        [`${crclC} > &`]: {
             height: '100px',
             content: '\'\'',
             background: 'grey',
@@ -55,7 +55,7 @@ export const crclB = style({
 //TODO: this variable has circular dependencies, please fix it yourself!
 export const crclC = style({
     selectors: {
-        [`${crclA}+&`]: {
+        [`${crclA} + &`]: {
             overflow: 'hidden',
             position: 'absolute',
             left: '-12px',

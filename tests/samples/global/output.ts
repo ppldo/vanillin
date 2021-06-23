@@ -1,4 +1,5 @@
 import { style, globalStyle } from "@vanilla-extract/css";
+export const d = style({});
 export const c = style({
     flex: 1,
 });
@@ -15,21 +16,24 @@ globalStyle("body article p", {
 globalStyle("p:hover", {
     color: "purple",
 });
-globalStyle("article>p", {
+globalStyle("article > p", {
     padding: "16px",
 });
-globalStyle("article>p:hover", {
+globalStyle("article > p:hover", {
     backgroundColor: "blue",
 });
-globalStyle("p+img", {
+globalStyle("p + img", {
     margin: "10px",
 });
-globalStyle("p~img", {
+globalStyle("p ~ img", {
     margin: "12px 6px",
 });
-globalStyle("p+img>a", {
+globalStyle("p + img > a", {
     color: "red",
 });
-globalStyle(`p+${c}>a`, {
+globalStyle(`p + ${c} > a`, {
     color: "red",
+});
+globalStyle(`${d} p`, {
+    color: "green",
 });

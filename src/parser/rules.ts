@@ -2,17 +2,12 @@ import {AtRule, Root, Rule} from 'postcss'
 import camelCase from 'camelcase'
 
 import {Style} from '../model'
-import {VanillaSelectorMgr} from '../writer'
-import {vanillaSelectorParser, GlobalSelector} from './selector'
+import {parseSelector, VanillaSelector} from './selector'
 
-export interface IGlobalRule {
-    vanillaSelector: VanillaSelectorMgr
+export interface VanillaRule extends VanillaSelector {
+    selectorTemplate: string
     styles: Style
     deps: Set<string>
-}
-
-export interface IRegularRule extends IGlobalRule {
-    varName: string
 }
 
 interface IKeyFrame {
@@ -21,8 +16,8 @@ interface IKeyFrame {
 }
 
 export interface IParseRulesResult {
-    globalRules: IGlobalRule[]
-    regularRules: IRegularRule[]
+    globalRules: VanillaRule[]
+    regularRules: VanillaRule[]
     keyFrames: IKeyFrame[]
 }
 
@@ -84,20 +79,20 @@ export function parseRules(root: Root): IParseRulesResult {
             }
         } else if (r instanceof Rule) {
             for (const selector of r.selectors) {
-                const parsedSelector = vanillaSelectorParser.transformSync(selector)
-                if (parsedSelector instanceof GlobalSelector) {
-                    result.globalRules.push({
-                        vanillaSelector: parsedSelector.vanillaSelector,
-                        styles: parseCssProps(r),
-                        deps: parsedSelector.deps,
-                    })
-                } else if (parsedSelector.varName) {
-                    result.regularRules.push({
-                        vanillaSelector: parsedSelector.vanillaSelector,
-                        styles: parseCssProps(r),
-                        deps: parsedSelector.deps,
-                        varName: parsedSelector.varName,
-                    })
+                const {targetClass, parts} = parseSelector(selector)
+                const deps: Set<string> = new Set(parts.flatMap(p => typeof p === 'object' ? [p.var] : []))
+                const styles = parseCssProps(r)
+                const rule: VanillaRule = {
+                    selectorTemplate: parts.map(p => typeof p === 'string' ? p : '${' + p.var + '}').join(),
+                    targetClass,
+                    parts,
+                    styles,
+                    deps,
+                }
+                if (!targetClass) {
+                    result.globalRules.push(rule)
+                } else {
+                    result.regularRules.push(rule)
                 }
             }
         }

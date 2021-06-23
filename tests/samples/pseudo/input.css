@@ -1,0 +1,57 @@
+.one {
+    background: yellow;
+}
+.one:hover{
+    color: red;
+}
+.root {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0
+}
+.root:not(:hover) > * {
+    display: none;
+}
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-top: 14px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word
+}
+
+.wrap:not(.inactive) {
+    cursor: pointer;
+}
+
+.wrap a {
+    color: #4A90E2
+}
+
+.wrap a:hover {
+    color: #007AFF;
+}
+
+.root .dot:nth-of-type(1) {
+    color: purple;
+}
+.root .dot:nth-of-type(2) {
+    color: blue;
+
+}
+.root .dot:nth-of-type(3) {
+    color: green;
+}
+
+p:not(:first-child):not(.special) {
+    color: red;
+}
+
+.bubble:not(.compact):not(.forceArrow:not(.one)) .arrow {
+    right: -60px;
+}

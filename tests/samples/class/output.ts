@@ -15,16 +15,16 @@ export const two = style({
         [`${one} &`]: {
             padding: "16px",
         },
-        [`${one}>&`]: {
+        [`${one} > &`]: {
             backgroundColor: "green",
         },
-        [`${one}>&:hover`]: {
+        [`${one} > &:hover`]: {
             backgroundColor: "yellow",
         },
-        [`${one}+&`]: {
+        [`${one} + &`]: {
             padding: "16px 8px",
         },
-        [`${one}~&`]: {
+        [`${one} ~ &`]: {
             padding: "8px",
         },
     },
@@ -34,7 +34,7 @@ export const three = style({
         [`${one} ${two} &`]: {
             margin: "10px",
         },
-        [`${one}+${two}>&`]: {
+        [`${one} + ${two} > &`]: {
             margin: "10px",
         },
     },
