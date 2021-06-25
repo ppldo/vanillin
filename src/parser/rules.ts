@@ -1,5 +1,4 @@
 import {AtRule, Root, Rule} from 'postcss'
-import camelCase from 'camelcase'
 
 import {Style} from '../model'
 import {parseSelector, VanillaSelector} from './selector'
@@ -25,11 +24,8 @@ function parseCssProps(rule: Rule): Style {
     let cssProp: Style = {}
     rule.walkDecls(decl => {
         let strValue = decl.value
-        let prop = camelCase(decl.prop)
+        let prop = decl.prop
         let numValue = Number(decl.value)
-        if (decl.prop.startsWith('-')) {
-            prop = camelCase(decl.prop, {pascalCase: true})
-        }
         if (isNaN(numValue))
             cssProp[prop] = strValue
         else

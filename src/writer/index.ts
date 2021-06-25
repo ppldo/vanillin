@@ -57,7 +57,18 @@ class CSSPropsAstMaker {
     public makePropsAst(): ts.ObjectLiteralElementLike[] {
         let result = []
         const animationProp = ['animation', 'animationName']
-        for (const [prop, value] of Object.entries(this.s)) {
+        const vars = []
+
+        for (let [prop, value] of Object.entries(this.s)) {
+            if (prop.startsWith('--')) {
+                vars.push({prop, value})
+                continue
+            }
+            else if (prop.startsWith('-')) {
+                prop = camelCase(prop, {pascalCase: true})
+            } else {
+                prop = camelCase(prop)
+            }
             const node = factory.createPropertyAssignment(
                 factory.createIdentifier(prop),
                 (typeof value === 'string') ?
@@ -72,6 +83,21 @@ class CSSPropsAstMaker {
             }
 
             result.push(node)
+        }
+        if (vars.length) {
+            result.unshift(
+                factory.createPropertyAssignment(
+                    factory.createIdentifier('vars'),
+                    makeObject(
+                        [...vars.map(v => {
+                            return factory.createPropertyAssignment(
+                                factory.createStringLiteral(v.prop),
+                                factory.createStringLiteral(v.value.toString()),
+                            )
+                        })],
+                    ),
+                )
+            )
         }
         return result
     }

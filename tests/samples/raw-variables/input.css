@@ -1,0 +1,32 @@
+:root {
+    --color-black: #000;
+    --color-0: #F44336;
+    --color-0-1: #FF8575;
+    --color-gradient-0: linear-gradient(0deg, var(--color-0) 0%, var(--color-0-1) 100%);
+    --color-red: red;
+    --color-1: #C2185B;
+    --font-weight-regular: 400;
+    --font-weight-bold: 500;
+}
+
+.root {
+    --color-0: purple;
+    color: var(--color-0);
+    background: var(--color-gradient-0);
+}
+
+.one {
+    color: var(--color-black);
+    background-color: var(--color-1);
+    font-weight: var(--font-weight-regular);
+}
+
+.two {
+    color: var(--color-red);
+    font-weight: var(--font-weight-bold);
+}
+
+.one .two:hover {
+    --color-1: black;
+    color: var(--color-1);
+}
