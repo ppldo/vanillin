@@ -1,6 +1,5 @@
 import ts, {factory} from 'typescript'
-import {VariableNameAstMaker} from './index'
-
+import {makeTemplateAst, VariableNameAstMaker} from './index'
 
 export class VanillaSelectorMgr {
     constructor(private parts: Array<string | {var: string}>) {
@@ -28,42 +27,8 @@ export class VanillaSelectorMgr {
                 literal += part
             return this.checkLocal(factory.createStringLiteral(literal))
         }
-
-        let head = ''
-        let currentSpan: { varName: string, text: string } | undefined = undefined
-        const spans: ts.TemplateSpan[] = []
-        for (const p of this.parts) {
-            if (typeof p === 'object') {
-                if (currentSpan) {
-                    spans.push(
-                        factory.createTemplateSpan(
-                            new VariableNameAstMaker(currentSpan.varName).make(),
-                            factory.createTemplateMiddle(currentSpan.text),
-                        ),
-                    )
-                }
-                currentSpan = {varName: p.var, text: ''}
-            } else {
-                if (!currentSpan) {
-                    head += p
-                } else {
-                    currentSpan.text += p
-                }
-            }
-        }
-        if (!currentSpan)
-            new Error('assertion error')
-        else {
-            spans.push(
-                factory.createTemplateSpan(
-                    new VariableNameAstMaker(currentSpan.varName).make(),
-                    factory.createTemplateTail(currentSpan.text),
-                ),
-            )
-        }
-        return this.checkLocal(factory.createTemplateExpression(
-            factory.createTemplateHead(head),
-            spans,
+        return this.checkLocal(makeTemplateAst(
+            this.parts.map(p => (typeof p === 'string') ? p : {expr: new VariableNameAstMaker(p.var).make()})
         ))
     }
 }

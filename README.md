@@ -119,6 +119,86 @@ PREPR=$(postcss styles.module.css) &&
 
 Also add vanillin version and desired output.
 
+## Variables
+
+Given such CSS variables:
+
+```css
+:root {
+    --color-black: #000;
+    --color-0: #F44336;
+    --color-0-1: #FF8575;
+    --color-gradient-0: linear-gradient(0deg, var(--color-0) 0%, var(--color-0-1) 100%);
+    --color-red: red;
+    --color-1: #C2185B;
+    --color-1-1: #E33594;
+    --color-gradient-1: linear-gradient(0deg, var(--color-1) 0%, var(--color-1-1) 100%);
+}
+```
+
+You should create file `vars.ts` with `vars` export and all variables translated to camelCase:
+
+`vars.ts`
+```ts
+import { createGlobalTheme } from '@vanilla-extract/css'
+const colorBlack = '#000'
+const color0 = '#F44336'
+const color01 = '#FF8575'
+const colorGradient0 = `linear-gradient(0deg, ${color0} 0%, ${color01} 100%)`
+const colorRed = 'red'
+const color1 = '#C2185B'
+const color11 = '#E33594'
+const colorGradient1 = `linear-gradient(0deg, ${color1} 0%, ${color11} 100%)`
+
+export const vars = createGlobalTheme(':root', {
+    colorBlack,
+    color0,
+    color01,
+    colorGradient0,
+    colorRed,
+    color1,
+    color11,
+    colorGradient1
+})
+```
+
+You can remember it path to shell variable:
+```sh
+VARS=$(realpath vars.ts)
+```
+
+Then when you run vanillin on your regular css pass this path under `vars` flag.
+
+**ATTENTION**: You should run this command from directory, where `styles.css.ts` will be placed!
+```sh
+cat styles.modules.css | vanillin --vars $VARS > styles.css.ts
+```
+
+vanillin will replace variables from theme to refs. All unknown variables will be left as is.
+```css
+.root {
+    --color-0: purple;
+    --color-some: green;
+    color: var(--color-0, red);
+    background: var(--color-gradient-0);
+    border: solid 1px var(--color-brand);
+}
+```
+
+```ts
+import {vars} from '../vars.ts'
+export const root = style({
+    vars: {
+        [vars.color0]: 'purple',
+        '--color-some': 'green',
+    },
+    color: vars.color0,
+    background: vars.colorGradient0,
+    border: 'solid 1px var(--color-brand)',
+})
+```
+
+
 ## Bulk converting
 Call vanillin with two arguments: directory with preprocessed css files and your output directory.
 
@@ -126,7 +206,7 @@ Vanillin does recursive search css files in directory and writes it to output di
 example styles.css from ./build/some-component/styles.css will be generated in ./src/some-component/styles.css.ts
 (full project).
 
-We assume your original files named `styles.module.css` and names of generated files is `styles.css.ts`
+We assume your original files named `styles.module.css`,then names of generated files will be `styles.modules.css.ts`
 
 Select project part which you are going convert:
 ```sh
@@ -135,7 +215,7 @@ FOLDER=src
 
 Generate styles.css.ts with vanillin:
 ```sh
-postcss "$FOLDER/**/*.module.css" --base $FOLDER --dir build
+postcss "$FOLDER/**/styles.module.css" --base $FOLDER --dir build
 vanillin build $FOLDER
 rm -rf build
 ```
@@ -143,7 +223,7 @@ rm -rf build
 You can bulk replace style imports with IDE or use some regexp:
 ```sh
 find $FOLDER -name '*.tsx' -type f -print0 |
- xargs -0 sed -E -i "s#import\s+(\w+)\s+from\s+.\./styles\.module\.css.#import * as \1 from './styles.css'#"
+ xargs -0 sed -E -i "s#import\s+(\w+)\s+from\s+.\./styles\.module\.css.#import * as \1 from './styles.module.css'#"
 ```
 
 Fix all TODO comments and possible compilation errors in generated files.

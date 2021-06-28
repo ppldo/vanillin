@@ -2,6 +2,7 @@ import {AtRule, Root, Rule} from 'postcss'
 
 import {Style} from '../model'
 import {parseSelector, VanillaSelector} from './selector'
+import {parseValue} from './values'
 
 export interface VanillaRule extends VanillaSelector {
     selectorTemplate: string
@@ -23,13 +24,7 @@ export interface IParseRulesResult {
 function parseCssProps(rule: Rule): Style {
     let cssProp: Style = {}
     rule.walkDecls(decl => {
-        let strValue = decl.value
-        let prop = decl.prop
-        let numValue = Number(decl.value)
-        if (isNaN(numValue))
-            cssProp[prop] = strValue
-        else
-            cssProp[prop] = numValue
+        cssProp[decl.prop] = parseValue(decl.value)
     })
     return cssProp
 }

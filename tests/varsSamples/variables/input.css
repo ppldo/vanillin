@@ -1,0 +1,18 @@
+.root {
+    --color-0: purple;
+    color: var(--color-0);
+    background: var(--color-gradient-0);
+}
+
+.one {
+    color: var(--color-black);
+    background: var(--color-1);
+}
+
+.two {
+    color: var(--color-red);
+}
+
+.one .two:hover {
+    color: var(--color-1);
+}

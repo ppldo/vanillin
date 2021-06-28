@@ -11,7 +11,7 @@
 
 .root {
     --color-0: purple;
-    color: var(--color-0);
+    color: var(--color-0, blue);
     background: var(--color-gradient-0);
 }
 

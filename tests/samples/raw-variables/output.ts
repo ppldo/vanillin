@@ -3,8 +3,8 @@ export const root = style({
     vars: {
         '--color-0': 'purple'
     },
-    color: 'var(--color-0)',
-    background: 'var(--color-gradient-0)'
+    color: 'var(--color-0, blue)',
+    background: 'var(--color-gradient-0)',
 })
 export const one = style({
     color: 'var(--color-black)',

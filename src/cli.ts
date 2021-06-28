@@ -23,9 +23,10 @@ function run() {
                     console.log(err)
                 else {
                     const relative = path.relative(cssDirName, path.dirname(file))
+                    const fileName = path.basename(file)
                     const root = postcss.parse(data, {from: undefined})
                     const vanillinedCss = vanillin(root)
-                    fs.writeFileSync(`${targetDirName}/${relative}/styles.css.ts`, vanillinedCss, 'utf8')
+                    fs.writeFileSync(`${targetDirName}/${relative}/${fileName}.ts`, vanillinedCss, 'utf8')
                 }
             })
         })

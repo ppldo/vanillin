@@ -177,12 +177,12 @@ class Mapper {
     }
 }
 
-export function vanillin(root: Root): string {
+export function vanillin(root: Root, vars?: {names: Iterable<string>, importPath: string}): string {
     const parsedRules = parseRules(root)
     const mapper = new Mapper(
         reduceGlobalStyles(parsedRules.globalRules),
         reduceRegularStyles(parsedRules.regularRules),
         parsedRules.keyFrames.map(r => new KeyFrame(r.varName, r.data)),
     )
-    return expressionsToTSString(mapper.map())
+    return expressionsToTSString(mapper.map(), vars)
 }
