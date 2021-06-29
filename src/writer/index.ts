@@ -1,7 +1,8 @@
 import ts, {factory, SyntaxKind} from 'typescript'
+import camelCase from 'camelcase'
+import ld from 'lodash'
 
 import {VanillaSelectorMgr} from './vanila-selector'
-import camelCase from 'camelcase'
 import {Style, Value} from '../model'
 
 export {VanillaSelectorMgr}
@@ -504,7 +505,7 @@ export class FileMgr {
     getImports(): Array<{ importNames: string[], from: string }> {
         const result = []
         if (this.vanilla.size)
-            result.push({importNames: [...this.vanilla], from: '@vanilla-extract/css'})
+            result.push({importNames: ld.orderBy([...this.vanilla]), from: '@vanilla-extract/css'})
         if (this.hasVars)
             result.push({importNames: ['vars'], from: this.varsImportPath})
         return result
@@ -542,10 +543,10 @@ export class FileMgr {
 export function expressionsToTSString(exprs: Array<IExpression>, vars?: {names: Iterable<string>, importPath: string}): string {
     const tsNodes: ts.Statement[] = []
     const file = new FileMgr(new Set(vars?.names), vars?.importPath ?? '')
-    for (const e of exprs) {
+    for (const e of [...exprs].reverse()) {
         switch (e.type) {
             case StatementEnum.REGULAR: {
-                tsNodes.push(...new RegularStyleAstMaker(file, e).make())
+                tsNodes.push(...new RegularStyleAstMaker(file, e).make().reverse())
                 break
             }
             case StatementEnum.GLOBAL: {
@@ -562,27 +563,27 @@ export function expressionsToTSString(exprs: Array<IExpression>, vars?: {names: 
             }
         }
     }
-    tsNodes.unshift(...file.getImports().map(i =>
+    tsNodes.push(...file.getImports().reverse().map(i =>
         factory.createImportDeclaration(
             undefined,
             undefined,
             factory.createImportClause(
                 false,
                 undefined,
-                factory.createNamedImports([
-                    ...i.importNames.map(i => {
-                        return factory.createImportSpecifier(
+                factory.createNamedImports(
+                    i.importNames.map(i =>
+                        factory.createImportSpecifier(
                             undefined,
                             factory.createIdentifier(i),
                         )
-                    }),
-                ]),
+                    ),
+                ),
             ),
             factory.createStringLiteral(i.from),
         ),
     ))
 
     return ts.createPrinter().printFile(
-        factory.createSourceFile(tsNodes, factory.createToken(SyntaxKind.EndOfFileToken), 0),
+        factory.createSourceFile(tsNodes.reverse(), factory.createToken(SyntaxKind.EndOfFileToken), 0),
     )
 }

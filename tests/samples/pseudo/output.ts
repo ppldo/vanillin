@@ -1,4 +1,4 @@
-import {style, globalStyle} from '@vanilla-extract/css'
+import {globalStyle, style} from '@vanilla-extract/css'
 export const inactive = style({})
 export const bubble = style({})
 export const compact = style({})
