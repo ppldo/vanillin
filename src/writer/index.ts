@@ -401,6 +401,9 @@ class RegularStyleAstMaker {
     // })
     public make(): [ts.VariableStatement] | [ts.VariableStatement, ts.ExportDeclaration] {
         const varName = new VariableNameAstMaker(this.regularStyle.varName)
+
+        this.file.export(varName.escapedName)
+
         const varDecl = factory.createVariableStatement(
             varName.isReserved ? undefined : [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
             factory.createVariableDeclarationList(
@@ -468,8 +471,16 @@ export class KeyframeAstMaker {
 
     public make(): ts.VariableStatement {
         const name = new VariableNameAstMaker(this.keyFrame.varName)
+
+        let modifiers
+
+        if (!this.file.hasExport(name.escapedName)) {
+            this.file.export(name.escapedName)
+            modifiers = [factory.createModifier(SyntaxKind.ExportKeyword)]
+        }
+
         return checkCamelCased(name, factory.createVariableStatement(
-            [factory.createModifier(SyntaxKind.ExportKeyword)],
+            modifiers,
             factory.createVariableDeclarationList(
                 [factory.createVariableDeclaration(
                     name.make(),
@@ -490,6 +501,7 @@ export class KeyframeAstMaker {
 export class FileMgr {
     private vanilla = new Set<string>()
     private hasVars = false
+    private exports = new Set<string>()
 
     constructor(
         private readonly externalVars: Set<string>,
@@ -537,6 +549,16 @@ export class FileMgr {
             throw new Error('There is no external var named ' + name)
         this.hasVars = true
         return varName
+    }
+
+    export(name: string) {
+        if (this.exports.has(name))
+            throw new Error('Already has export ' + name)
+        this.exports.add(name)
+    }
+
+    hasExport(name: string) {
+        return this.exports.has(name)
     }
 }
 
