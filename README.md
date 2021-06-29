@@ -23,11 +23,11 @@ When it doesn't possible to transpile automatically, vanillin will add a TODO co
 }
 
 .wrap a {
-  color: #4A90E2
+  color: var(--color-0);
 }
 
 .wrap a:hover {
-  color: #007AFF;
+  color: var(--color-1, pink);
 }
 ```
 
@@ -35,6 +35,7 @@ When it doesn't possible to transpile automatically, vanillin will add a TODO co
 
 ```ts
 import {style, globalStyle} from "@vanilla-extract/css";
+import {vars} from "../vars";
 
 export const wrap = style({
   display: "flex",
@@ -47,8 +48,8 @@ export const wrap = style({
 export const active = style({
   selectors: {[`${wrap}&`]: {cursor: "pointer"}}
 });
-globalStyle(`${wrap} a`, {color: "#4A90E2"});
-globalStyle(`${wrap} a:hover`, {color: "#007AFF"});
+globalStyle(`${wrap} a`, {color: vars.color0});
+globalStyle(`${wrap} a:hover`, {color: fallbackVar(vars.color1, "pink")});
 ```
 
 ## Install:
@@ -66,7 +67,7 @@ If you use preprocessor, you need to preprocess your file before use vanillin.
 
 Next examples assume your project uses PostCSS. For another preprocessor consults with their CLI documentation.
 
-Note: don't forget to install postcss-cli with proper version
+**Note:** don't forget to install postcss-cli with proper version
 
 ```sh
 yarn add -D postcss-cli@YOUR_POSTCSS_VERSION
@@ -121,6 +122,10 @@ Also add vanillin version and desired output.
 
 ## Variables
 
+**Note:**
+If you want to convert variables.css to vanilla-extract variables,
+don't forget to disable the CSS processor plugin for translating custom properties.
+
 Given such CSS variables:
 
 ```css
@@ -168,13 +173,13 @@ VARS=$(realpath vars.ts)
 ```
 
 Then when you run vanillin on your regular css pass this path under `vars` flag.
-
-**ATTENTION**: You should run this command from directory, where `styles.css.ts` will be placed!
 ```sh
-cat styles.modules.css | vanillin --vars $VARS > styles.css.ts
+vanillin --vars $VARS
 ```
 
-vanillin will replace variables from theme to refs. All unknown variables will be left as is.
+Vanillin will replace variables from theme to refs. All unknown variables will be left as is.
+
+**input:**
 ```css
 .root {
     --color-0: purple;
@@ -185,19 +190,20 @@ vanillin will replace variables from theme to refs. All unknown variables will b
 }
 ```
 
+**output:**
 ```ts
+import {style} from "@vanilla-extract/css";
 import {vars} from '../vars.ts'
 export const root = style({
     vars: {
         [vars.color0]: 'purple',
         '--color-some': 'green',
     },
-    color: vars.color0,
+    color: fallbackVar(vars.color0, "red"),
     background: vars.colorGradient0,
     border: 'solid 1px var(--color-brand)',
 })
 ```
-
 
 ## Bulk converting
 Call vanillin with two arguments: directory with preprocessed css files and your output directory.
@@ -216,7 +222,7 @@ FOLDER=src
 Generate styles.css.ts with vanillin:
 ```sh
 postcss "$FOLDER/**/styles.module.css" --base $FOLDER --dir build
-vanillin build $FOLDER
+vanillin --bulk build $FOLDER
 rm -rf build
 ```
 
@@ -297,7 +303,6 @@ All kebab-case class names will be transformed to camelCase, because of js synta
 
 ```ts
 import { keyframes, style, globalStyle } from "@vanilla-extract/css";
-//TODO: animation ref is not implemented yet, please fix it yourself!
 const slidein = keyframes({
     from: {
         marginLeft: "100%",

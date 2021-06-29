@@ -1,0 +1,38 @@
+.root {
+    --color-purple: purple;
+    box-sizing: content-box;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 60px;
+    background: var(--color-purple);
+}
+
+.top,
+.bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    flex-grow: 1;
+}
+
+.top {
+    justify-content: flex-start;
+}
+.bottom {
+    justify-content: flex-end;
+}
+
+.compact {
+    flex-direction: row;
+    height: 50px
+}
+
+.compact .top {
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.compact .bottom {
+    flex-grow: 0;
+}

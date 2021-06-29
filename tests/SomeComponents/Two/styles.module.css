@@ -1,0 +1,25 @@
+.root {
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    width: 100%;
+    flex: 0 0 60px;
+    color: #7D808A;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.active {
+    background-color: var(--color-red);
+    color: var(--color-black);
+    cursor: default;
+}
+
+.compact {
+    height: 100%;
+    width: 60px;
+}
