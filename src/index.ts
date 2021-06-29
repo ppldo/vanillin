@@ -46,11 +46,6 @@ class CircularJSComment implements IComment {
     public readonly comment = 'TODO: this variable has circular dependencies, please fix it yourself!'
 }
 
-class KeyframeJSComment implements IComment {
-    public readonly type = StatementEnum.COMMENT
-    public readonly comment = 'TODO: animation ref is not implemented yet, please fix it yourself!'
-}
-
 class KeyFrame implements IKeyFrame {
     public readonly type = StatementEnum.KEYFRAME
 
@@ -160,8 +155,6 @@ class Mapper {
     }
 
     private addKeyFrames(result: Array<IExpression>) {
-        if (this.keyframes.length > 0)
-            result.push(new KeyframeJSComment())
         for (const r of this.keyframes) {
             result.push(new KeyFrame(r.varName, r.data))
         }
