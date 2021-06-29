@@ -13,6 +13,7 @@ export {forStyle as for}
 export const SomePascal = style({
     color: 'red',
 })
+//TODO: name was camelCased
 export const someKebab = style({
     color: 'green',
 })

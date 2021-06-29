@@ -19,6 +19,12 @@ export const caret = keyframes({
         borderColor: 'transparent',
     },
 })
+//TODO: name was camelCased
+export const someKebab = keyframes({
+    "50%": {
+        borderColor: "transparent",
+    },
+});
 export const shake = style({
     //TODO: local animation name interpolation is not implemented yet, please fix it yourself!
     animationName: 'shake',

@@ -39,6 +39,7 @@ export const three = style({
         },
     },
 });
+//TODO: name was camelCased
 export const galleryItem = style({
     selectors: {
         ["&::before"]: {

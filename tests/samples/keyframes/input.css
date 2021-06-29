@@ -27,6 +27,11 @@
     border-color: transparent;
   }
 }
+@keyframes some-kebab {
+    50% {
+        border-color: transparent;
+    }
+}
 
 .cursor:before {
   content: '';

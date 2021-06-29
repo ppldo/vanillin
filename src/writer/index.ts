@@ -99,6 +99,12 @@ function makeExternalVar(file: FileMgr, varName: string): ts.Expression {
     )
 }
 
+function checkCamelCased<T extends ts.Node>(name: VariableNameAstMaker, node: T): T {
+    if (name.dashed)
+        ts.addSyntheticLeadingComment(node, SyntaxKind.SingleLineCommentTrivia, 'TODO: name was camelCased')
+    return node
+}
+
 export class CSSValueAstMaker {
     constructor(
         private file: FileMgr,
@@ -314,10 +320,16 @@ export class VariableNameAstMaker {
     readonly isReserved: boolean
     readonly escapedName: string
     readonly rawName: string
+    readonly dashed: boolean
 
     constructor(rawName: string) {
-        if (rawName.includes('-'))
+        if (rawName.includes('-')) {
             rawName = camelCase(rawName)
+            this.dashed = true
+        }
+        else
+            this.dashed = false
+
         this.rawName = rawName
         this.isReserved = VariableNameAstMaker.keywordsList.includes(rawName)
         if (this.isReserved)
@@ -405,9 +417,9 @@ class RegularStyleAstMaker {
             ),
         )
 
-        return !varName.isReserved ? [varDecl] : [
+        return !varName.isReserved ? [checkCamelCased(varName, varDecl)] : [
             varDecl,
-            factory.createExportDeclaration(
+            checkCamelCased(varName, factory.createExportDeclaration(
                 undefined,
                 undefined,
                 false,
@@ -415,7 +427,7 @@ class RegularStyleAstMaker {
                     factory.createIdentifier(varName.escapedName),
                     factory.createIdentifier(varName.rawName),
                 )]),
-            ),
+            )),
         ]
     }
 }
@@ -454,11 +466,12 @@ export class KeyframeAstMaker {
     }
 
     public make(): ts.VariableStatement {
-        return factory.createVariableStatement(
+        const name = new VariableNameAstMaker(this.keyFrame.varName)
+        return checkCamelCased(name, factory.createVariableStatement(
             [factory.createModifier(SyntaxKind.ExportKeyword)],
             factory.createVariableDeclarationList(
                 [factory.createVariableDeclaration(
-                    factory.createIdentifier(this.keyFrame.varName),
+                    name.make(),
                     undefined,
                     undefined,
                     factory.createCallExpression(
@@ -469,7 +482,7 @@ export class KeyframeAstMaker {
                 )],
                 ts.NodeFlags.Const,
             ),
-        )
+        ))
     }
 }
 
