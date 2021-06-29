@@ -455,7 +455,7 @@ export class KeyframeAstMaker {
 
     public make(): ts.VariableStatement {
         return factory.createVariableStatement(
-            undefined,
+            [factory.createModifier(SyntaxKind.ExportKeyword)],
             factory.createVariableDeclarationList(
                 [factory.createVariableDeclaration(
                     factory.createIdentifier(this.keyFrame.varName),

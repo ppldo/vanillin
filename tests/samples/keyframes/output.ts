@@ -1,6 +1,6 @@
 import {keyframes, style} from '@vanilla-extract/css'
 //TODO: animation ref is not implemented yet, please fix it yourself!
-const shake = keyframes({
+export const shake = keyframes({
     '10%, 90%': {
         transform: 'translate3d(-2px, 0, 0)',
     },
@@ -14,7 +14,7 @@ const shake = keyframes({
         transform: 'translate3d(4px, 0, 0)',
     },
 })
-const caret = keyframes({
+export const caret = keyframes({
     '50%': {
         borderColor: 'transparent',
     },
