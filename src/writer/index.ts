@@ -102,7 +102,11 @@ function makeExternalVar(file: FileMgr, varName: string): ts.Expression {
 
 function checkCamelCased<T extends ts.Node>(name: VariableNameAstMaker, node: T): T {
     if (name.dashed)
-        ts.addSyntheticLeadingComment(node, SyntaxKind.SingleLineCommentTrivia, 'TODO: name was camelCased')
+        ts.addSyntheticLeadingComment(
+            node,
+            SyntaxKind.SingleLineCommentTrivia,
+            'TODO: name was camelCased from ' + name.dashed
+        )
     return node
 }
 
@@ -321,15 +325,15 @@ export class VariableNameAstMaker {
     readonly isReserved: boolean
     readonly escapedName: string
     readonly rawName: string
-    readonly dashed: boolean
+    readonly dashed: string | null
 
     constructor(rawName: string) {
         if (rawName.includes('-')) {
+            this.dashed = rawName
             rawName = camelCase(rawName)
-            this.dashed = true
         }
         else
-            this.dashed = false
+            this.dashed = null
 
         this.rawName = rawName
         this.isReserved = VariableNameAstMaker.keywordsList.includes(rawName)

@@ -18,7 +18,7 @@ export const caret = keyframes({
         borderColor: 'transparent',
     },
 })
-//TODO: name was camelCased
+//TODO: name was camelCased from some-kebab
 export const someKebab = keyframes({
     "50%": {
         borderColor: "transparent",
