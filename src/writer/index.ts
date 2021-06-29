@@ -100,14 +100,38 @@ function makeExternalVar(file: FileMgr, varName: string): ts.Expression {
     )
 }
 
-function checkCamelCased<T extends ts.Node>(name: VariableNameAstMaker, node: T): T {
-    if (name.dashed)
-        ts.addSyntheticLeadingComment(
-            node,
-            SyntaxKind.SingleLineCommentTrivia,
-            'TODO: name was camelCased from ' + name.dashed
-        )
-    return node
+function varDecl(varName: VariableNameAstMaker, expr: ts.Expression, withExport = true): [ts.VariableStatement] | [ts.VariableStatement, ts.ExportDeclaration] {
+    const varStmt = factory.createVariableStatement(
+        withExport && !varName.isReserved ? [factory.createModifier(ts.SyntaxKind.ExportKeyword)] : undefined,
+        factory.createVariableDeclarationList(
+            [factory.createVariableDeclaration(
+                varName.make(),
+                undefined,
+                undefined,
+                expr,
+            )],
+            ts.NodeFlags.Const,
+        ),
+    )
+
+    if (varName.dashed) ts.addSyntheticLeadingComment(
+        varStmt,
+        SyntaxKind.SingleLineCommentTrivia,
+        'TODO: name was camelCased from ' + varName.dashed
+    )
+
+    return (!withExport || !varName.isReserved) ? [varStmt] : [
+        varStmt,
+        factory.createExportDeclaration(
+            undefined,
+            undefined,
+            false,
+            factory.createNamedExports([factory.createExportSpecifier(
+                factory.createIdentifier(varName.escapedName),
+                factory.createIdentifier(varName.rawName),
+            )]),
+        ),
+    ]
 }
 
 export class CSSValueAstMaker {
@@ -327,7 +351,7 @@ export class VariableNameAstMaker {
     readonly rawName: string
     readonly dashed: string | null
 
-    constructor(rawName: string) {
+    constructor(rawName: string, escapeSuffix = 'Style') {
         if (rawName.includes('-')) {
             this.dashed = rawName
             rawName = camelCase(rawName)
@@ -338,7 +362,7 @@ export class VariableNameAstMaker {
         this.rawName = rawName
         this.isReserved = VariableNameAstMaker.keywordsList.includes(rawName)
         if (this.isReserved)
-            this.escapedName = `${rawName}Style`
+            this.escapedName = rawName + escapeSuffix
         else
             this.escapedName = rawName
     }
@@ -403,40 +427,19 @@ class RegularStyleAstMaker {
     //         }
     //     }
     // })
-    public make(): [ts.VariableStatement] | [ts.VariableStatement, ts.ExportDeclaration] {
+    public make() {
         const varName = new VariableNameAstMaker(this.regularStyle.varName)
 
         this.file.export(varName.escapedName)
 
-        const varDecl = factory.createVariableStatement(
-            varName.isReserved ? undefined : [factory.createModifier(ts.SyntaxKind.ExportKeyword)],
-            factory.createVariableDeclarationList(
-                [factory.createVariableDeclaration(
-                    varName.make(),
-                    undefined,
-                    undefined,
-                    factory.createCallExpression(
-                        factory.createIdentifier(this.file.importStyle()),
-                        undefined,
-                        [this.createStyleRuleAst()],
-                    ),
-                )],
-                ts.NodeFlags.Const,
+        return varDecl(
+            varName,
+            factory.createCallExpression(
+                factory.createIdentifier(this.file.importStyle()),
+                undefined,
+                [this.createStyleRuleAst()],
             ),
         )
-
-        return !varName.isReserved ? [checkCamelCased(varName, varDecl)] : [
-            varDecl,
-            checkCamelCased(varName, factory.createExportDeclaration(
-                undefined,
-                undefined,
-                false,
-                factory.createNamedExports([factory.createExportSpecifier(
-                    factory.createIdentifier(varName.escapedName),
-                    factory.createIdentifier(varName.rawName),
-                )]),
-            )),
-        ]
     }
 }
 
@@ -473,32 +476,23 @@ export class KeyframeAstMaker {
         )
     }
 
-    public make(): ts.VariableStatement {
-        const name = new VariableNameAstMaker(this.keyFrame.varName)
+    public make() {
+        const name = new VariableNameAstMaker(this.keyFrame.varName, 'Keyframes')
 
-        let modifiers
+        const withExport = !this.file.hasExport(name.escapedName)
 
-        if (!this.file.hasExport(name.escapedName)) {
+        if (withExport)
             this.file.export(name.escapedName)
-            modifiers = [factory.createModifier(SyntaxKind.ExportKeyword)]
-        }
 
-        return checkCamelCased(name, factory.createVariableStatement(
-            modifiers,
-            factory.createVariableDeclarationList(
-                [factory.createVariableDeclaration(
-                    name.make(),
-                    undefined,
-                    undefined,
-                    factory.createCallExpression(
-                        factory.createIdentifier(this.file.importKeyframes()),
-                        undefined,
-                        [this.makeKeyFrameConfigAst()],
-                    ),
-                )],
-                ts.NodeFlags.Const,
+        return varDecl(
+            name,
+            factory.createCallExpression(
+                factory.createIdentifier(this.file.importKeyframes()),
+                undefined,
+                [this.makeKeyFrameConfigAst()],
             ),
-        ))
+            withExport,
+        )
     }
 }
 
@@ -580,7 +574,7 @@ export function expressionsToTSString(exprs: Array<IExpression>, vars?: {names: 
                 break
             }
             case StatementEnum.KEYFRAME: {
-                tsNodes.push(new KeyframeAstMaker(file, e).make())
+                tsNodes.push(...new KeyframeAstMaker(file, e).make().reverse())
                 break
             }
             case StatementEnum.COMMENT: {

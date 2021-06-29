@@ -32,6 +32,11 @@
         border-color: transparent;
     }
 }
+@keyframes do {
+    50% {
+        border-color: transparent;
+    }
+}
 
 .cursor:before {
   content: '';

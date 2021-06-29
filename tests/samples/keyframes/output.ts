@@ -24,6 +24,12 @@ export const someKebab = keyframes({
         borderColor: "transparent",
     },
 });
+const doKeyframes = keyframes({
+    '50%': {
+        borderColor: 'transparent',
+    },
+})
+export {doKeyframes as do}
 export const shake = style({
     //TODO: local animation name interpolation is not implemented yet, please fix it yourself!
     animationName: 'shake',
