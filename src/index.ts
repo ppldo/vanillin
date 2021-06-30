@@ -52,6 +52,7 @@ class KeyFrame implements IKeyFrame {
     constructor(
         public readonly varName: string,
         public readonly data: Map<string, Style>,
+        public readonly isGlobal: boolean,
     ) {
     }
 }
@@ -156,7 +157,7 @@ class Mapper {
 
     private addKeyFrames(result: Array<IExpression>) {
         for (const r of this.keyframes) {
-            result.push(new KeyFrame(r.varName, r.data))
+            result.push(new KeyFrame(r.varName, r.data, r.isGlobal))
         }
     }
 
@@ -175,7 +176,7 @@ export function vanillin(root: Root, vars?: {names: Iterable<string>, importPath
     const mapper = new Mapper(
         reduceGlobalStyles(parsedRules.globalRules),
         reduceRegularStyles(parsedRules.regularRules),
-        parsedRules.keyFrames.map(r => new KeyFrame(r.varName, r.data)),
+        parsedRules.keyFrames.map(r => new KeyFrame(r.varName, r.data, r.isGlobal)),
     )
     return expressionsToTSString(mapper.map(), vars)
 }

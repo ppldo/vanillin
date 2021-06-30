@@ -50,3 +50,9 @@ p + .c > a {
 .d a {
     color: green;
 }
+
+@keyframes :global(kf) {
+    from {
+        left: 0
+    }
+}

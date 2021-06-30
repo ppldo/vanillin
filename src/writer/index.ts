@@ -38,6 +38,7 @@ export interface IKeyFrame {
     type: StatementEnum.KEYFRAME
     varName: string
     data: Map<string, Style>
+    isGlobal: boolean
 }
 
 export type IExpression = IGlobalStyle | IRegularStyle | IComment | IKeyFrame
@@ -141,6 +142,22 @@ export class CSSValueAstMaker {
     ) {
     }
 
+    public make(value: Value): ts.Expression {
+        if (this.canBeNumber && value.length === 1 && typeof value[0] === 'string') {
+            let numValue = Number(value[0])
+            if (!isNaN(numValue))
+                return factory.createNumericLiteral(numValue)
+        }
+        if (value.length === 1 && typeof value[0] === 'object' && this.file.hasExternalVar(value[0].var))
+            return this.makeValuePartExpressionAst(value[0])
+        if (value.every(v => typeof v === 'string'))
+            return factory.createStringLiteral(value.join(''))
+        if (!this.includesExternalVars(value)) {
+            return factory.createStringLiteral(valueToString(value))
+        }
+        return makeTemplateAst(this.flatFallbacks(value))
+    }
+
     private includesExternalVars(value: Value): boolean {
         return value.some(v =>
             typeof v !== 'string'
@@ -181,22 +198,6 @@ export class CSSValueAstMaker {
             return ['var(', v.var, ')']
         }
         return value.flatMap(inner)
-    }
-
-    public make(value: Value): ts.Expression {
-        if (this.canBeNumber && value.length === 1 && typeof value[0] === 'string') {
-            let numValue = Number(value[0])
-            if (!isNaN(numValue))
-                return factory.createNumericLiteral(numValue)
-        }
-        if (value.length === 1 && typeof value[0] === 'object' && this.file.hasExternalVar(value[0].var))
-            return this.makeValuePartExpressionAst(value[0])
-        if (value.every(v => typeof v === 'string'))
-            return factory.createStringLiteral(value.join(''))
-        if (!this.includesExternalVars(value)) {
-            return factory.createStringLiteral(valueToString(value))
-        }
-        return makeTemplateAst(this.flatFallbacks(value))
     }
 }
 
@@ -341,6 +342,7 @@ export class VariableNameAstMaker {
         //imports from vanilla-extract
         'style',
         'globalStyle',
+        'globalKeyframes',
         'keyframes',
         'fallbackVar',
         'vars',
@@ -390,6 +392,31 @@ class RegularStyleAstMaker {
     //     }
     // }
 
+    // })
+    public make() {
+        const varName = new VariableNameAstMaker(this.regularStyle.varName)
+
+        this.file.export(varName.escapedName)
+
+        return varDecl(
+            varName,
+            factory.createCallExpression(
+                factory.createIdentifier(this.file.importStyle()),
+                undefined,
+                [this.createStyleRuleAst()],
+            ),
+        )
+    }
+
+    // Возвращает AST содержащий:
+    // export const className = style({
+    //     display: 'flex'
+    //     selectors: {
+    //         [`${parentClass}:focus &`]: {
+    //            background: '#fafafa'
+    //         }
+    //     }
+
     private createStyleRuleAst(): ts.Expression {
         if (this.regularStyle.selectorConfs.some(conf => !conf.vanillaSelector.isSelfOnly())) {
             return makeObject(
@@ -416,30 +443,6 @@ class RegularStyleAstMaker {
             ])
         }
     }
-
-    // Возвращает AST содержащий:
-    // export const className = style({
-    //     display: 'flex'
-    //     selectors: {
-    //         [`${parentClass}:focus &`]: {
-    //            background: '#fafafa'
-    //         }
-    //     }
-    // })
-    public make() {
-        const varName = new VariableNameAstMaker(this.regularStyle.varName)
-
-        this.file.export(varName.escapedName)
-
-        return varDecl(
-            varName,
-            factory.createCallExpression(
-                factory.createIdentifier(this.file.importStyle()),
-                undefined,
-                [this.createStyleRuleAst()],
-            ),
-        )
-    }
 }
 
 class CommentAstMaker {
@@ -464,6 +467,14 @@ export class KeyframeAstMaker {
     ) {
     }
 
+    public make() {
+        if (!this.keyFrame.isGlobal)
+            return this.makeLocal()
+        else {
+            return [this.makeGlobal()]
+        }
+    }
+
     private makeKeyFrameConfigAst(): ts.ObjectLiteralExpression {
         return makeObject(
             [...this.keyFrame.data.entries()].map(([literal, style]) => {
@@ -475,7 +486,7 @@ export class KeyframeAstMaker {
         )
     }
 
-    public make() {
+    private makeLocal() {
         const name = new VariableNameAstMaker(this.keyFrame.varName, 'Keyframes')
 
         const withExport = !this.file.hasExport(name.escapedName)
@@ -493,6 +504,16 @@ export class KeyframeAstMaker {
             withExport,
         )
     }
+
+    private makeGlobal() {
+        return factory.createExpressionStatement(
+            factory.createCallExpression(
+                factory.createIdentifier(this.file.importGlobalKeyframes()),
+                undefined,
+                [factory.createStringLiteral(this.keyFrame.varName), this.makeKeyFrameConfigAst()],
+            )
+        )
+    }
 }
 
 export class FileMgr {
@@ -506,11 +527,6 @@ export class FileMgr {
     ) {
     }
 
-    private import(str: string) {
-        this.vanilla.add(str)
-        return str
-    }
-
     getImports(): Array<{ importNames: string[], from: string }> {
         const result = []
         if (this.vanilla.size)
@@ -522,6 +538,10 @@ export class FileMgr {
 
     importKeyframes(): string {
         return this.import('keyframes')
+    }
+
+    importGlobalKeyframes(): string {
+        return this.import('globalKeyframes')
     }
 
     importFallback(): string {
@@ -556,6 +576,11 @@ export class FileMgr {
 
     hasExport(name: string) {
         return this.exports.has(name)
+    }
+
+    private import(str: string) {
+        this.vanilla.add(str)
+        return str
     }
 }
 

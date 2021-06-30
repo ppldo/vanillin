@@ -13,6 +13,7 @@ export interface VanillaRule extends VanillaSelector {
 interface IKeyFrame {
     varName: string
     data: Map<string, Style>
+    isGlobal: boolean
 }
 
 export interface IParseRulesResult {
@@ -29,6 +30,23 @@ function parseCssProps(rule: Rule): Style {
     return cssProp
 }
 
+function getKeyFrame(node: Rule, r: AtRule): IKeyFrame {
+    let varName = r.params
+    let isGlobal = false
+    const res = r.params.match(/:global\(([^)]*)\)/)
+    if (res) {
+        varName = res[1]
+        isGlobal = true
+    }
+    return {
+        varName,
+        data: new Map([
+            [node.selector, parseCssProps(node)],
+        ]),
+        isGlobal,
+    }
+}
+
 export function parseRules(root: Root): IParseRulesResult {
     let result: IParseRulesResult = {
         globalRules: [],
@@ -42,26 +60,17 @@ export function parseRules(root: Root): IParseRulesResult {
             if (r.name === 'keyframes') {
                 r.nodes.map(node => {
                     if (node instanceof Rule) {
+                        const keyFrame = getKeyFrame(node, r)
                         if (!result.keyFrames.length) {
                             parsedKeyFrameName.push(r.params)
-                            result.keyFrames.push({
-                                varName: r.params,
-                                data: new Map([
-                                    [node.selector, parseCssProps(node)],
-                                ]),
-                            })
+                            result.keyFrames.push(keyFrame)
                         } else {
                             for (const keyframe of result.keyFrames) {
                                 if (keyframe.varName === r.params) {
                                     keyframe.data.set(node.selector, parseCssProps(node))
                                 } else if (!parsedKeyFrameName.includes(r.params)) {
                                     parsedKeyFrameName.push(r.params)
-                                    result.keyFrames.push({
-                                        varName: r.params,
-                                        data: new Map([
-                                            [node.selector, parseCssProps(node)],
-                                        ]),
-                                    })
+                                    result.keyFrames.push(keyFrame)
                                 }
                             }
                         }
