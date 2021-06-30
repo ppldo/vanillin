@@ -117,7 +117,7 @@ function varDecl(varName: VariableNameAstMaker, expr: ts.Expression, withExport 
     if (varName.dashed) ts.addSyntheticLeadingComment(
         varStmt,
         SyntaxKind.SingleLineCommentTrivia,
-        'TODO: name was camelCased from ' + varName.dashed
+        'TODO: name was camelCased from ' + varName.dashed,
     )
 
     return (!withExport || !varName.isReserved) ? [varStmt] : [
@@ -224,7 +224,7 @@ class CSSPropsAstMaker {
                 prop = camelCase(prop)
             }
             const node = factory.createPropertyAssignment(
-                factory.createStringLiteral(prop),
+                prop,
                 new CSSValueAstMaker(this.file).make(value),
             )
             if (animationProp.includes(prop)) {
@@ -239,7 +239,7 @@ class CSSPropsAstMaker {
         if (vars.length) {
             result.unshift(
                 factory.createPropertyAssignment(
-                    factory.createIdentifier('vars'),
+                    'vars',
                     makeObject([...vars.map(v => factory.createPropertyAssignment(
                         this.file.hasExternalVar(v.prop)
                             ? factory.createComputedPropertyName(makeExternalVar(this.file, v.prop))
@@ -355,8 +355,7 @@ export class VariableNameAstMaker {
         if (rawName.includes('-')) {
             this.dashed = rawName
             rawName = camelCase(rawName)
-        }
-        else
+        } else
             this.dashed = null
 
         this.rawName = rawName
@@ -399,7 +398,7 @@ class RegularStyleAstMaker {
                         return new CSSPropsAstMaker(this.file, s.style).makePropsAst()
                     }),
                     factory.createPropertyAssignment(
-                        factory.createIdentifier('selectors'),
+                        'selectors',
                         makeObject([...this.regularStyle.selectorConfs.filter(s => !s.vanillaSelector.isSelfOnly()).map(s => {
                             return factory.createPropertyAssignment(
                                 factory.createComputedPropertyName(s.vanillaSelector.make()),
@@ -560,7 +559,7 @@ export class FileMgr {
     }
 }
 
-export function expressionsToTSString(exprs: Array<IExpression>, vars?: {names: Iterable<string>, importPath: string}): string {
+export function expressionsToTSString(exprs: Array<IExpression>, vars?: { names: Iterable<string>, importPath: string }): string {
     const tsNodes: ts.Statement[] = []
     const file = new FileMgr(new Set(vars?.names), vars?.importPath ?? '')
     for (const e of [...exprs].reverse()) {
@@ -595,7 +594,7 @@ export function expressionsToTSString(exprs: Array<IExpression>, vars?: {names: 
                         factory.createImportSpecifier(
                             undefined,
                             factory.createIdentifier(i),
-                        )
+                        ),
                     ),
                 ),
             ),
