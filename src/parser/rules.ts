@@ -25,7 +25,10 @@ export interface IParseRulesResult {
 function parseCssProps(rule: Rule): Style {
     let cssProp: Style = {}
     rule.walkDecls(decl => {
-        cssProp[decl.prop] = parseValue(decl.value)
+        const value = parseValue(decl.value)
+        if (decl.important)
+            value.push(' !important')
+        cssProp[decl.prop] = value
     })
     return cssProp
 }

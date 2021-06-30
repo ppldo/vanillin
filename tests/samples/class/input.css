@@ -1,5 +1,5 @@
 .one {
-  background: red;
+  background: red !important;
 }
 
 .one.two {
@@ -29,7 +29,8 @@
 }
 
 .one > .two {
-  background-color: green;
+  background-color: green !important;
+    flex: 1 !important;
 }
 
 .one > .two:hover {

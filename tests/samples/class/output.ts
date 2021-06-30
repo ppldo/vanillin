@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css";
 export const one = style({
-    background: "red",
+    background: "red !important",
     selectors: {
         ["&:hover"]: {
             backgroundColor: "red",
@@ -16,7 +16,8 @@ export const two = style({
             padding: "16px",
         },
         [`${one} > &`]: {
-            backgroundColor: "green",
+            backgroundColor: "green !important",
+            flex: "1 !important"
         },
         [`${one} > &:hover`]: {
             backgroundColor: "yellow",
