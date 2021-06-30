@@ -12,7 +12,7 @@ export const one = style({
     background: vars.color1
 })
 export const two = style({
-    color: vars.colorRed,
+    color: `${vars.colorRed} !important`,
     selectors: {
         [`${one} &:hover`]: {
             color: vars.color1,
