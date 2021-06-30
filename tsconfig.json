@@ -1,21 +1,27 @@
 {
-  "include": ["./src/**/*.ts", "./tests/**/*.ts"],
-  "exclude": ["node_modules", "./tests/samples/"],
-  "compilerOptions": {
-    "outDir": "./dist",
-    "noEmit": false,
-    "module": "commonjs",
-    "target": "es2019",
-    "sourceMap": false,
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "lib": [
-      "es2019",
+    "include": [
+        "./src/**/*.ts",
     ],
-    "strict": true,
-
-    "noUnusedLocals": true,                   /* Report errors on unused locals. */
-    "noImplicitReturns": true,                /* Report error when not all code paths in function return a value. */
-    "noFallthroughCasesInSwitch": true,       /* Report errors for fallthrough cases in switch statement. */
-  }
+    "exclude": [
+        "node_modules",
+    ],
+    "compilerOptions": {
+        "outDir": "./dist",
+        "noEmit": false,
+        "module": "commonjs",
+        "target": "es2019",
+        "sourceMap": false,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "lib": [
+            "es2019"
+        ],
+        "strict": true,
+        "noUnusedLocals": true,
+        /* Report errors on unused locals. */
+        "noImplicitReturns": true,
+        /* Report error when not all code paths in function return a value. */
+        "noFallthroughCasesInSwitch": true
+        /* Report errors for fallthrough cases in switch statement. */
+    }
 }
