@@ -1,6 +1,6 @@
 {
     "name": "@ppldo/vanillin",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "Converting tool for migrate css modules code base to vanilla-extract.",
     "bin": {
         "vanillin": "dist/cli.js"
