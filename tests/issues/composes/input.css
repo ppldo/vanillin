@@ -1,0 +1,32 @@
+.reset {
+    border: none;
+    background: none;
+}
+
+.root {
+    composes: reset;
+    display: flex;
+    background: green;
+}
+
+.one {
+    color: red;
+}
+
+.two {
+    background: blue;
+}
+
+.three {
+    composes: one two;
+    padding: 16px;
+}
+
+.otherWrap {
+    composes: wrap from './tests/samples/pseudo/input.css';
+    padding: 8px 16px;
+}
+
+.otherBubble {
+    composes: bubble from global;
+}

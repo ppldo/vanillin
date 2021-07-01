@@ -1,0 +1,38 @@
+@keyframes moveTo {
+    0% {
+        left: 0;
+    }
+
+    75% {
+        left: 20px;
+    }
+
+    100% {
+        left: 75px;
+    }
+}
+
+.circle {
+    background: red;
+    height: 40px;
+    width: 40px;
+    border-radius: 100%;
+    position: absolute;
+    animation-name: moveTo;
+    animation-duration: 0.5s;
+    animation-timing-function: linear;
+}
+
+@keyframes caret {
+    50% {
+        border-color: transparent;
+    }
+}
+
+.cursor:before {
+    animation: caret 1.2s steps(1) infinite;
+}
+
+.one {
+    animation: oneMoveTo 1.2s steps(1) infinite;
+}
