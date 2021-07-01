@@ -2,8 +2,6 @@
 
 CLI-tool for transpiling css modules to vanilla-extract.
 
-Vanillin can convert css rules with: tag, class, keyframe, combinator, pseudo class, simple selector, nested selector.
-
 When it doesn't possible to transpile automatically, vanillin will add a TODO comment.
 
 **input:**
