@@ -257,6 +257,8 @@ All kebab-case class names will be transformed to camelCase, with TODO comment, 
 .localA :global global-b :local(localC) :local .localB {}
 ```
 
+For all not implemented yet features from CSS and CSS Modules look here: https://github.com/ppldo/vanillin/issues?q=is%3Aissue+is%3Aopen+label%3Atodo
+
 **input:**
 
 ```css
