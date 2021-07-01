@@ -173,8 +173,10 @@ VARS=$(realpath vars.ts)
 ```
 
 Then when you run vanillin on your regular css pass this path under `vars` flag.
+
+**ATTENTION**: You should run this command from directory, where `styles.css.ts` will be placed!
 ```sh
-vanillin --vars $VARS
+postcss styles.module.css | vanillin --vars $VARS > styles.css.ts
 ```
 
 Vanillin will replace variables from theme to refs. All unknown variables will be left as is.
@@ -226,6 +228,12 @@ vanillin --bulk build $FOLDER
 rm -rf build
 ```
 
+You can use vanillin --bulk with `vars` flag.
+
+```sh
+vanillin --bulk cssDir targetDir --vars vars.ts
+```
+
 You can bulk replace style imports with IDE or use some regexp:
 ```sh
 find $FOLDER -name '*.tsx' -type f -print0 |
@@ -241,7 +249,7 @@ find $FOLDER -name "styles.module.css" -exec rm {} \;
 
 ## Caveats
 
-All kebab-case class names will be transformed to camelCase, because of js syntax.
+All kebab-case class names will be transformed to camelCase, with TODO comment, because of js syntax
 
 :local() pseudo from css modules spec not supported.
 ```css
