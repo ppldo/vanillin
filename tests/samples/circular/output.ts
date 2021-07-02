@@ -1,6 +1,6 @@
-import {style} from '@vanilla-extract/css'
+import {composeStyles, style} from '@vanilla-extract/css'
+
 export const empty1 = style({})
-export const empty2 = style({})
 export const one = style({
     selectors: {
         [`${empty1}&`]: {
@@ -8,6 +8,7 @@ export const one = style({
         },
     },
 })
+export const empty2 = style({})
 export const two = style({
     selectors: {
         [`${empty2} ${one} &`]: {
@@ -15,50 +16,71 @@ export const two = style({
         },
     },
 })
-export const four = style({
-    flex: '0 0 auto',
-    color: 'purple',
-})
-export const five = style({
-    selectors: {
-        ['&:hover']: {
-            color: 'pink',
-        },
-    },
-})
+const fiveMarker = style({})
+const fourMarker = style({})
 export const three = style({
     selectors: {
-        [`${five} > ${four} &`]: {
+        [`${fiveMarker} > ${fourMarker} &`]: {
             color: 'green',
         },
     },
 })
-//TODO: this variable has circular dependencies, please fix it yourself!
+export const four = composeStyles(
+    fourMarker,
+    style({
+        flex: '0 0 auto',
+        color: 'purple',
+        selectors: {
+            [`${fourMarker} &`]: {
+                color: 'aqua',
+            },
+        },
+    })
+)
+export const five = composeStyles(
+    fiveMarker,
+    style({
+        selectors: {
+            ['&:hover']: {
+                color: 'pink',
+            },
+            [`${fourMarker} &`]: {
+                color: 'green',
+            },
+        },
+    })
+)
+const crclBMarker = style({})
 export const crclA = style({
     selectors: {
-        [`${crclB} &`]: {
+        [`${crclBMarker} &`]: {
             minWidth: '200px',
             width: '200px',
         },
     },
 })
-//TODO: this variable has circular dependencies, please fix it yourself!
-export const crclB = style({
-    selectors: {
-        [`${crclC} > &`]: {
-            height: '100px',
-            content: '\'\'',
-            background: 'grey',
+const crclCMarker = style({})
+export const crclB = composeStyles(
+    crclBMarker,
+    style({
+        selectors: {
+            [`${crclCMarker} > &`]: {
+                height: '100px',
+                content: '\'\'',
+                background: 'grey',
+            },
         },
-    },
-})
-//TODO: this variable has circular dependencies, please fix it yourself!
-export const crclC = style({
-    selectors: {
-        [`${crclA} + &`]: {
-            overflow: 'hidden',
-            position: 'absolute',
-            left: '-12px',
+    })
+)
+export const crclC = composeStyles(
+    crclCMarker,
+    style({
+        selectors: {
+            [`${crclA} + &`]: {
+                overflow: 'hidden',
+                position: 'absolute',
+                left: '-12px',
+            },
         },
-    },
-})
+    })
+)

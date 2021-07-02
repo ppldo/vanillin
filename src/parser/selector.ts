@@ -1,10 +1,10 @@
-import selectorParser, {Selector, ClassName} from 'postcss-selector-parser'
+import selectorParser, {ClassName, Selector} from 'postcss-selector-parser'
 
 function parseSelectorInner(selector: Selector): Array<string | {
     var: string
     node: ClassName
 }> {
-    const parts: Array<string | { var: string, node: ClassName}> = []
+    const parts: Array<string | { var: string, node: ClassName }> = []
     for (const node of selector.nodes) {
         if (node.type === 'class') {
             const vn = node.value
@@ -16,8 +16,7 @@ function parseSelectorInner(selector: Selector): Array<string | {
                 if (node.length) {
                     node.nodes[0].each(n => void parts.push(n.toString()))
                     continue
-                }
-                else {
+                } else {
                     selector.nodes.slice(selector.nodes.indexOf(node) + 1)
                         .forEach(n => void parts.push(n.toString()))
                     break

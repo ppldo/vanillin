@@ -1,12 +1,9 @@
 import {globalKeyframes, globalStyle, style} from '@vanilla-extract/css'
+
 globalKeyframes('kf', {
     from: {
         left: 0,
     },
-})
-export const d = style({})
-export const c = style({
-    flex: 1,
 })
 globalStyle('a', {
     color: 'red',
@@ -36,9 +33,13 @@ globalStyle('p ~ img', {
 globalStyle('p + img > a', {
     color: 'red',
 })
+export const c = style({
+    flex: 1,
+})
 globalStyle(`p + ${c} > a`, {
     color: 'red',
 })
+export const d = style({})
 globalStyle(`${d} p`, {
     color: 'green',
 })

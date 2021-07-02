@@ -2,7 +2,13 @@ import ts, {factory} from 'typescript'
 import {makeTemplateAst, VariableNameAstMaker} from './index'
 
 export class VanillaSelectorMgr {
-    constructor(private parts: Array<string | {var: string}>) {
+    constructor(private parts: Array<string | { var: string }>) {
+    }
+
+    replaceVar(name: string, to: string) {
+        for (const p of this.parts)
+            if (typeof p === 'object' && p.var === name)
+                p.var = to
     }
 
     public isSelfOnly(): boolean {

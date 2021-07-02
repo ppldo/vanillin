@@ -1,0 +1,16 @@
+.important {
+    font-weight: bold;
+}
+
+.menu {
+    flex: 1;
+}
+
+.menu a:visited {
+    color: green;
+}
+
+/*order is important!*/
+.menu a.important {
+    color: red;
+}

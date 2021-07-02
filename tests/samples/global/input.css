@@ -1,46 +1,46 @@
 a {
-  color: red;
-  background-color: grey;
+    color: red;
+    background-color: grey;
 }
 
-body a{
-  background-color: white;
+body a {
+    background-color: white;
 }
 
-body article p{
-  color: green;
+body article p {
+    color: green;
 }
 
 p:hover {
-  color: purple;
+    color: purple;
 }
 
 article > p {
-  padding: 16px;
+    padding: 16px;
 }
 
 article > p:hover {
-  background-color: blue;
+    background-color: blue;
 }
 
 p + img {
-  margin: 10px;
+    margin: 10px;
 }
 
 p ~ img {
-  margin: 12px 6px;
+    margin: 12px 6px;
 }
 
 p + img > a {
-  color: red;
+    color: red;
 }
 
 .c {
-  flex: 1;
+    flex: 1;
 }
 
 p + .c > a {
-  color: red;
+    color: red;
 }
 
 .d p {

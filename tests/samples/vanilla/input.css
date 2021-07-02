@@ -1,12 +1,12 @@
 .one,
 .two {
-  background: red;
+    background: red;
 }
 
 .two.three {
-  background-color: purple;
+    background-color: purple;
 }
 
 .four .five {
-  padding: 16px;
+    padding: 16px;
 }

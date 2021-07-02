@@ -48,7 +48,7 @@ function getVars(p: string): Vars {
     return {names, absPath}
 }
 
-function getRelVars(vars: Vars | undefined, dir: string = process.cwd()): {names: Iterable<string>, importPath: string} | undefined {
+function getRelVars(vars: Vars | undefined, dir: string = process.cwd()): { names: Iterable<string>, importPath: string } | undefined {
     if (!vars)
         return undefined
     let relativePath = path.relative(dir, vars.absPath).replace(/\.ts$/, '')

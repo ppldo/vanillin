@@ -1,4 +1,5 @@
 import {keyframes, style} from '@vanilla-extract/css'
+
 const shake = keyframes({
     '10%, 90%': {
         transform: 'translate3d(-2px, 0, 0)',
@@ -20,10 +21,10 @@ export const caret = keyframes({
 })
 //TODO: name was camelCased from some-kebab
 export const someKebab = keyframes({
-    "50%": {
-        borderColor: "transparent",
+    '50%': {
+        borderColor: 'transparent',
     },
-});
+})
 const doKeyframes = keyframes({
     '50%': {
         borderColor: 'transparent',

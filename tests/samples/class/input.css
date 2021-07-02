@@ -1,50 +1,58 @@
 .one {
-  background: red !important;
+    background: red !important;
 }
 
 .one.two {
-  background-color: purple;
+    background-color: purple;
+}
+
+.two.one {
+    flex: 1;
 }
 
 .one .two {
-  padding: 16px;
+    padding: 16px;
+}
+
+.one .two {
+    color: red;
 }
 
 .one .two .three {
-  margin: 10px;
+    margin: 10px;
 }
 
 .gallery-item::before {
-  content: '';
-  background-color: grey;
+    content: '';
+    background-color: grey;
 }
 
 .gallery-item:after {
-  content: '';
-  background-color: darkgray;
+    content: '';
+    background-color: darkgray;
 }
 
 .one:hover {
-  background-color: red;
+    background-color: red;
 }
 
 .one > .two {
-  background-color: green !important;
+    background-color: green !important;
     flex: 1 !important;
 }
 
 .one > .two:hover {
-  background-color: yellow;
+    background-color: yellow;
 }
 
 .one + .two {
-  padding: 16px 8px;
+    padding: 16px 8px;
 }
 
 .one ~ .two {
-  padding: 8px;
+    padding: 8px;
 }
 
 .one + .two > .three {
-  margin: 10px;
+    margin: 10px;
 }

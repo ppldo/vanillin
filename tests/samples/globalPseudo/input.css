@@ -1,6 +1,7 @@
 .root :global(.emoji-mart-emoji) {
     cursor: text;
 }
+
 .root :global .emoji-mart-emoji .global-b {
     cursor: text;
 }

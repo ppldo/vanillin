@@ -23,7 +23,7 @@ function parseInnerValue(nodes: Node[]): Value {
             if (node.value === 'var') {
                 parts.push(...parseVarNodes(node.nodes))
             } else {
-                parts.push(node.value , '(', ...parseInnerValue(node.nodes), ')')
+                parts.push(node.value, '(', ...parseInnerValue(node.nodes), ')')
             }
         }
     }

@@ -1,10 +1,8 @@
 import {Root} from 'postcss'
-import ld from 'lodash'
 
 import {Style} from './model'
 import {
     expressionsToTSString,
-    IComment,
     IExpression,
     IGlobalStyle,
     IKeyFrame,
@@ -24,9 +22,18 @@ class GlobalStyle implements IGlobalStyle {
         public readonly deps: Set<string>,
     ) {
     }
+
+    replaceDep(dep: string, to: string) {
+        this.deps.delete(dep)
+        this.deps.add(to)
+        this.vanillaSelector.replaceVar(dep, to)
+    }
 }
 
 class RegularStyle implements IRegularStyle {
+    public markerName: string | null = null
+    public isMarker: boolean = false
+
     public readonly type = StatementEnum.REGULAR
 
     constructor(
@@ -39,11 +46,26 @@ class RegularStyle implements IRegularStyle {
     public static makeEmpty(varName: string): RegularStyle {
         return new RegularStyle(varName, [], new Set())
     }
-}
 
-class CircularJSComment implements IComment {
-    public readonly type = StatementEnum.COMMENT
-    public readonly comment = 'TODO: this variable has circular dependencies, please fix it yourself!'
+    public static makeMarker(name: string): RegularStyle {
+        const s = new RegularStyle(name, [], new Set())
+        s.isMarker = true
+        return s
+    }
+
+    addSelector(conf: ISelectorConf, deps: Iterable<string>) {
+        this.selectorConfs.push(conf)
+        for (const dep of deps)
+            this.deps.add(dep)
+    }
+
+    replaceDep(dep: string, to: string) {
+        this.deps.delete(dep)
+        this.deps.add(to)
+        for (const selectorConf of this.selectorConfs) {
+            selectorConf.vanillaSelector.replaceVar(dep, to)
+        }
+    }
 }
 
 class KeyFrame implements IKeyFrame {
@@ -57,101 +79,95 @@ class KeyFrame implements IKeyFrame {
     }
 }
 
-function reduceGlobalStyles(rules: ParsedRule[]): GlobalStyle[] {
-    return ld.chain(rules).groupBy(r => r.selector.template).values().map(globalRules => {
-        let allDeps = new Set<string>()
-        let allStyles: Style = {}
-        for (const globalRule of globalRules) {
-            allDeps = new Set([...allDeps, ...globalRule.selector.deps])
-            allStyles = {...allStyles, ...globalRule.styles}
-        }
-        return new GlobalStyle(new VanillaSelectorMgr(globalRules[0].selector.parts), allStyles, allDeps)
-    }).value()
-}
 
-function reduceRegularStyles(rules: ParsedRule[]): RegularStyle[] {
-    return ld.chain(rules).groupBy((r) => {
-        return r.selector.targetClass!
-    }).values().map((regularRulesByVar) => {
-        let allDeps = new Set<string>()
-        for (const r of regularRulesByVar) {
-            allDeps = new Set([...allDeps, ...r.selector.deps])
-        }
-        const selectorConfs: ISelectorConf[] = ld.chain(regularRulesByVar)
-            .groupBy(r => r.selector.template)
-            .values().map(regularRulesBySelector => {
-                let style: Style = {}
-                for (const r of regularRulesBySelector) {
-                    style = {...style, ...r.styles}
-                }
-                return {
-                    vanillaSelector: new VanillaSelectorMgr(regularRulesBySelector[0].selector.parts),
+function reduceStyles(rules: ParsedRule[]): Array<RegularStyle | GlobalStyle> {
+    let last: Array<RegularStyle> = []
+    const res: Array<RegularStyle | GlobalStyle> = []
+    const regulars = new Set<string>()
+
+    for (const {selector, style} of rules) {
+        const target = selector.targetClass
+        if (!target) {
+            res.push(...last, new GlobalStyle(
+                new VanillaSelectorMgr(selector.parts),
+                style,
+                new Set(selector.deps),
+            ))
+            last = []
+        } else {
+            const conf: ISelectorConf = {
+                vanillaSelector: new VanillaSelectorMgr(selector.parts),
+                style,
+            }
+
+            const existing = last.find(s => s.varName === target)
+            if (existing)
+                existing.addSelector(conf, selector.deps)
+            else if (regulars.has(target)) {
+                res.push(...last, new GlobalStyle(
+                    new VanillaSelectorMgr(selector.parts.map(p => p === '&' ? {var: target} : p)),
                     style,
-                }
-            }).value()
-        return new RegularStyle(regularRulesByVar[0].selector.targetClass!, selectorConfs, allDeps)
-    }).value()
+                    new Set(selector.deps).add(target),
+                ))
+                last = []
+            } else {
+                last.push(new RegularStyle(target, [conf], new Set(selector.deps)))
+                regulars.add(target)
+            }
+        }
+    }
+    res.push(...last)
+
+    return res
 }
 
 class Mapper {
     constructor(
-        readonly globalStyles: readonly GlobalStyle[],
-        readonly regularStyles: readonly RegularStyle[],
+        readonly styles: Array<RegularStyle | GlobalStyle>,
         readonly keyframes: readonly KeyFrame[],
     ) {
     }
 
-    private addEmptyRegularStyles(result: Array<IExpression>): Set<string> {
-        let allDeps: Array<string> = []
+    private addStyles(result: Array<IExpression>) {
         const existing = new Set<string>()
 
-        for (const style of this.regularStyles) {
-            existing.add(style.varName)
-            allDeps.push(...style.deps.values())
+        for (const style of this.styles) {
+            if (style instanceof RegularStyle)
+                existing.add(style.varName)
         }
-        for (const style of this.globalStyles) {
-            allDeps.push(...style.deps.values())
-        }
-        const empty = new Set<string>()
-        for (const name of allDeps) {
-            if (!existing.has(name)) {
-                result.push(new RegularStyle(name, [], new Set<string>()))
-                empty.add(name)
-                existing.add(name)
-            }
-        }
-        return empty
-    }
 
-    private addRegularStyles(result: Array<IExpression>, processedVarNames: Set<string>) {
-        const emptyRegularStyles: Set<string> = this.addEmptyRegularStyles(result)
-        processedVarNames = new Set([...emptyRegularStyles, ...processedVarNames])
-        let isProcessed = true
-        while (isProcessed) {
-            isProcessed = false
-            for (const style of this.regularStyles) {
-                if (!processedVarNames.has(style.varName)) {
-                    if ([...style.deps.values()].every((d) => processedVarNames.has(d))) {
-                        result.push(new RegularStyle(style.varName, style.selectorConfs, processedVarNames))
-                        processedVarNames.add(style.varName)
-                        isProcessed = true
+        const declared = new Set<string>()
+
+        const markers = new Map<string, string>()
+
+        for (const style of this.styles) {
+            for (const dep of [...style.deps]) {
+                const markerName = dep + 'Marker'
+
+                if (!declared.has(dep)) {
+                    if (!existing.has(dep)) { //just add empty
+                        result.push(RegularStyle.makeEmpty(dep))
+                        existing.add(dep)
+                        declared.add(dep)
+                    } else { //need circular marker
+                        if (!markers.has(dep)) {
+                            markers.set(dep, markerName)
+                            result.push(RegularStyle.makeMarker(markerName))
+                        }
+                        style.replaceDep(dep, markerName)
                     }
                 }
-            }
-        }
-        if (!isProcessed) {
-            for (const style of this.regularStyles) {
-                if (!processedVarNames.has(style.varName)) {
-                    result.push(new CircularJSComment())
-                    result.push(new RegularStyle(style.varName, style.selectorConfs, processedVarNames))
-                }
-            }
-        }
-    }
 
-    private addGlobalStyles(result: Array<IExpression>, processedVarNames: Set<string>) {
-        for (const r of this.globalStyles) {
-            result.push(new GlobalStyle(r.vanillaSelector, r.style, processedVarNames))
+                if (markers.has(dep))
+                    style.replaceDep(dep, markerName)
+            }
+
+            if (style instanceof RegularStyle) {
+                style.markerName = markers.get(style.varName) ?? null
+                declared.add(style.varName)
+            }
+
+            result.push(style)
         }
     }
 
@@ -163,19 +179,16 @@ class Mapper {
 
     public map(): Array<IExpression> {
         const result = new Array<IExpression>()
-        const processedVarNames = new Set<string>()
         this.addKeyFrames(result)
-        this.addRegularStyles(result, processedVarNames)
-        this.addGlobalStyles(result, processedVarNames)
+        this.addStyles(result)
         return result
     }
 }
 
-export function vanillin(root: Root, vars?: {names: Iterable<string>, importPath: string}): string {
+export function vanillin(root: Root, vars?: { names: Iterable<string>, importPath: string }): string {
     const parsedRules = parseRules(root)
     const mapper = new Mapper(
-        reduceGlobalStyles(parsedRules.globalRules),
-        reduceRegularStyles(parsedRules.regularRules),
+        reduceStyles(parsedRules.rules),
         parsedRules.keyFrames.map(r => new KeyFrame(r.varName, r.data, r.isGlobal)),
     )
     return expressionsToTSString(mapper.map(), vars)

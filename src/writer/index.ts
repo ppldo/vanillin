@@ -15,7 +15,6 @@ export interface ISelectorConf {
 export enum StatementEnum {
     GLOBAL,
     REGULAR,
-    COMMENT,
     KEYFRAME,
 }
 
@@ -26,12 +25,9 @@ export interface IGlobalStyle extends ISelectorConf {
 export interface IRegularStyle {
     type: StatementEnum.REGULAR
     varName: string
+    markerName: string | null
+    isMarker: boolean
     selectorConfs: ISelectorConf[]
-}
-
-export interface IComment {
-    type: StatementEnum.COMMENT
-    comment: string
 }
 
 export interface IKeyFrame {
@@ -41,7 +37,7 @@ export interface IKeyFrame {
     isGlobal: boolean
 }
 
-export type IExpression = IGlobalStyle | IRegularStyle | IComment | IKeyFrame
+export type IExpression = IGlobalStyle | IRegularStyle | IKeyFrame
 
 const makeObject: typeof factory.createObjectLiteralExpression = (properties) => {
     return factory.createObjectLiteralExpression(properties, true)
@@ -346,6 +342,7 @@ export class VariableNameAstMaker {
         'keyframes',
         'fallbackVar',
         'vars',
+        'composeStyles',
     ]
 
     readonly isReserved: boolean
@@ -383,6 +380,44 @@ class RegularStyleAstMaker {
     }
 
     // Возвращает AST содержащий:
+    // export const className = style({
+    //     display: 'flex'
+    //     selectors: {
+    //         [`${parentClass}:focus &`]: {
+    //            background: '#fafafa'
+    //         }
+    //     }
+    // })
+    public make() {
+        const varName = new VariableNameAstMaker(this.regularStyle.varName)
+
+        const exported = !this.regularStyle.isMarker
+
+        if (exported)
+            this.file.export(varName.escapedName)
+
+        let styleCall = factory.createCallExpression(
+            factory.createIdentifier(this.file.importStyle()),
+            undefined,
+            [this.createStyleRuleAst()],
+        )
+
+        if (this.regularStyle.markerName) {
+            styleCall = factory.createCallExpression(
+                factory.createIdentifier(this.file.importCompose()),
+                undefined,
+                [new VariableNameAstMaker(this.regularStyle.markerName).make(), styleCall]
+            )
+        }
+
+        return varDecl(
+            varName,
+            styleCall,
+            exported,
+        )
+    }
+
+    // Возвращает AST содержащий:
     // {
     //     display: 'flex'
     //     selectors: {
@@ -392,71 +427,26 @@ class RegularStyleAstMaker {
     //     }
     // }
 
-    // })
-    public make() {
-        const varName = new VariableNameAstMaker(this.regularStyle.varName)
-
-        this.file.export(varName.escapedName)
-
-        return varDecl(
-            varName,
-            factory.createCallExpression(
-                factory.createIdentifier(this.file.importStyle()),
-                undefined,
-                [this.createStyleRuleAst()],
-            ),
-        )
-    }
-
-    // Возвращает AST содержащий:
-    // export const className = style({
-    //     display: 'flex'
-    //     selectors: {
-    //         [`${parentClass}:focus &`]: {
-    //            background: '#fafafa'
-    //         }
-    //     }
-
     private createStyleRuleAst(): ts.Expression {
-        if (this.regularStyle.selectorConfs.some(conf => !conf.vanillaSelector.isSelfOnly())) {
-            return makeObject(
-                [
-                    ...this.regularStyle.selectorConfs.filter(s => s.vanillaSelector.isSelfOnly()).flatMap((s) => {
-                        return new CSSPropsAstMaker(this.file, s.style).makePropsAst()
-                    }),
-                    factory.createPropertyAssignment(
-                        'selectors',
-                        makeObject([...this.regularStyle.selectorConfs.filter(s => !s.vanillaSelector.isSelfOnly()).map(s => {
-                            return factory.createPropertyAssignment(
-                                factory.createComputedPropertyName(s.vanillaSelector.make()),
-                                new CSSPropsAstMaker(this.file, s.style).makeObjectAst(),
-                            )
-                        })]),
-                    ),
-                ],
+        const props = this.regularStyle.selectorConfs
+            .filter(s => s.vanillaSelector.isSelfOnly())
+            .flatMap(s => new CSSPropsAstMaker(this.file, s.style).makePropsAst())
+
+        const selectors = this.regularStyle.selectorConfs
+            .filter(s => !s.vanillaSelector.isSelfOnly())
+            .map(s => factory.createPropertyAssignment(
+                factory.createComputedPropertyName(s.vanillaSelector.make()),
+                new CSSPropsAstMaker(this.file, s.style).makeObjectAst(),
+            ))
+
+        if (selectors.length) props.push(
+            factory.createPropertyAssignment(
+                'selectors',
+                makeObject(selectors),
             )
-        } else {
-            return makeObject([
-                ...this.regularStyle.selectorConfs.filter(s => s.vanillaSelector.isSelfOnly()).flatMap((s) => {
-                    return new CSSPropsAstMaker(this.file, s.style).makePropsAst()
-                }),
-            ])
-        }
-    }
-}
+        )
 
-class CommentAstMaker {
-    constructor(
-        private comment: IComment,
-    ) {
-    }
-
-    // Возвращает AST содержащий:
-    // //TODO: this is Commeeeeeeeeeent!
-    public make(): ts.Statement {
-        const s = factory.createEmptyStatement()
-        ts.addSyntheticLeadingComment(s, SyntaxKind.SingleLineCommentTrivia, this.comment.comment)
-        return s
+        return makeObject(props)
     }
 }
 
@@ -556,6 +546,10 @@ export class FileMgr {
         return this.import('globalStyle')
     }
 
+    importCompose(): string {
+        return this.import('composeStyles')
+    }
+
     hasExternalVar(name: string): boolean {
         return this.externalVars.has(camelCase(name))
     }
@@ -584,6 +578,9 @@ export class FileMgr {
     }
 }
 
+function assertUnreachable(_: never) {
+}
+
 export function expressionsToTSString(exprs: Array<IExpression>, vars?: { names: Iterable<string>, importPath: string }): string {
     const tsNodes: ts.Statement[] = []
     const file = new FileMgr(new Set(vars?.names), vars?.importPath ?? '')
@@ -601,10 +598,8 @@ export function expressionsToTSString(exprs: Array<IExpression>, vars?: { names:
                 tsNodes.push(...new KeyframeAstMaker(file, e).make().reverse())
                 break
             }
-            case StatementEnum.COMMENT: {
-                tsNodes.push(new CommentAstMaker(e).make())
-                break
-            }
+            default:
+                assertUnreachable(e)
         }
     }
     tsNodes.push(...file.getImports().reverse().map(i =>

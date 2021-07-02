@@ -1,5 +1,5 @@
 import {style} from '@vanilla-extract/css'
-export const four = style({})
+
 export const one = style({
     background: 'red',
 })
@@ -13,6 +13,7 @@ export const three = style({
         },
     },
 })
+export const four = style({})
 export const five = style({
     selectors: {
         [`${four} &`]: {

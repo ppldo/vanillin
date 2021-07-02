@@ -1,37 +1,45 @@
 .empty1.one {
-  background: red;
+    background: red;
 }
 
 .empty2 .one .two {
-  background: blue;
+    background: blue;
 }
 
 .five > .four .three {
-  color: green;
+    color: green;
 }
 
 .four {
-  flex: 0 0 auto;
-  color: purple;
+    flex: 0 0 auto;
+    color: purple;
 }
 
 .five:hover {
-  color: pink;
+    color: pink;
+}
+
+.four .five {
+    color: green;
+}
+
+.four .four {
+    color: aqua;
 }
 
 .crclB .crclA {
-  min-width: 200px;
-  width: 200px;
+    min-width: 200px;
+    width: 200px;
 }
 
 .crclC > .crclB {
-  height: 100px;
-  content: '';
-  background: grey;
+    height: 100px;
+    content: '';
+    background: grey;
 }
 
 .crclA + .crclC {
-  overflow: hidden;
-  position: absolute;
-  left: -12px;
+    overflow: hidden;
+    position: absolute;
+    left: -12px;
 }

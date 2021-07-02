@@ -1,9 +1,11 @@
 .one {
     background: yellow;
 }
-.one:hover{
+
+.one:hover {
     color: red;
 }
+
 .root {
     display: block;
     position: absolute;
@@ -12,6 +14,7 @@
     top: 0;
     bottom: 0
 }
+
 .root:not(:hover) > * {
     display: none;
 }
@@ -40,10 +43,12 @@
 .root .dot:nth-of-type(1) {
     color: purple;
 }
+
 .root .dot:nth-of-type(2) {
     color: blue;
 
 }
+
 .root .dot:nth-of-type(3) {
     color: green;
 }

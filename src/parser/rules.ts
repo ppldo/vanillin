@@ -1,12 +1,12 @@
 import {AtRule, Root, Rule} from 'postcss'
 
 import {Style} from '../model'
-import {parseSelector, ParsedSelector} from './selector'
+import {ParsedSelector, parseSelector} from './selector'
 import {parseValue} from './values'
 
 export interface ParsedRule {
     selector: ParsedSelector
-    styles: Style
+    style: Style
 }
 
 interface IKeyFrames {
@@ -16,8 +16,7 @@ interface IKeyFrames {
 }
 
 export interface IParseRulesResult {
-    globalRules: ParsedRule[]
-    regularRules: ParsedRule[]
+    rules: ParsedRule[]
     keyFrames: IKeyFrames[]
 }
 
@@ -49,8 +48,7 @@ function getKeyFrames(r: AtRule): IKeyFrames {
 
 export function parseRules(root: Root): IParseRulesResult {
     let result: IParseRulesResult = {
-        globalRules: [],
-        regularRules: [],
+        rules: [],
         keyFrames: [],
     }
 
@@ -71,16 +69,12 @@ export function parseRules(root: Root): IParseRulesResult {
         } else if (r instanceof Rule) {
             for (const s of r.selectors) {
                 const selector = parseSelector(s)
-                const styles = parseCssProps(r)
+                const style = parseCssProps(r)
                 const rule: ParsedRule = {
                     selector,
-                    styles,
+                    style,
                 }
-                if (!selector.targetClass) {
-                    result.globalRules.push(rule)
-                } else {
-                    result.regularRules.push(rule)
-                }
+                result.rules.push(rule)
             }
         }
     })

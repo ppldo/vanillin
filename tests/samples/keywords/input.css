@@ -1,9 +1,9 @@
 .for {
-  background: red;
+    background: red;
 }
 
 .do.for {
-  background-color: purple;
+    background-color: purple;
 }
 
 .SomePascal {
@@ -13,6 +13,7 @@
 .some-kebab {
     color: green;
 }
+
 .style {
     color: blue;
 }
