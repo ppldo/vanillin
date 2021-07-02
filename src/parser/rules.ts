@@ -1,13 +1,12 @@
 import {AtRule, Root, Rule} from 'postcss'
 
 import {Style} from '../model'
-import {parseSelector, VanillaSelector} from './selector'
+import {parseSelector, ParsedSelector} from './selector'
 import {parseValue} from './values'
 
-export interface VanillaRule extends VanillaSelector {
-    selectorTemplate: string
+export interface ParsedRule {
+    selector: ParsedSelector
     styles: Style
-    deps: Set<string>
 }
 
 interface IKeyFrames {
@@ -17,8 +16,8 @@ interface IKeyFrames {
 }
 
 export interface IParseRulesResult {
-    globalRules: VanillaRule[]
-    regularRules: VanillaRule[]
+    globalRules: ParsedRule[]
+    regularRules: ParsedRule[]
     keyFrames: IKeyFrames[]
 }
 
@@ -70,18 +69,14 @@ export function parseRules(root: Root): IParseRulesResult {
                     result.keyFrames.push(keyFrames)
             }
         } else if (r instanceof Rule) {
-            for (const selector of r.selectors) {
-                const {targetClass, parts} = parseSelector(selector)
-                const deps: Set<string> = new Set(parts.flatMap(p => typeof p === 'object' ? [p.var] : []))
+            for (const s of r.selectors) {
+                const selector = parseSelector(s)
                 const styles = parseCssProps(r)
-                const rule: VanillaRule = {
-                    selectorTemplate: parts.map(p => typeof p === 'string' ? p : '${' + p.var + '}').join(),
-                    targetClass,
-                    parts,
+                const rule: ParsedRule = {
+                    selector,
                     styles,
-                    deps,
                 }
-                if (!targetClass) {
+                if (!selector.targetClass) {
                     result.globalRules.push(rule)
                 } else {
                     result.regularRules.push(rule)

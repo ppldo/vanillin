@@ -13,7 +13,7 @@ import {
     StatementEnum,
     VanillaSelectorMgr,
 } from './writer'
-import {VanillaRule, parseRules} from './parser/rules'
+import {ParsedRule, parseRules} from './parser/rules'
 
 class GlobalStyle implements IGlobalStyle {
     public readonly type = StatementEnum.GLOBAL
@@ -57,39 +57,39 @@ class KeyFrame implements IKeyFrame {
     }
 }
 
-function reduceGlobalStyles(rules: VanillaRule[]): GlobalStyle[] {
-    return ld.chain(rules).groupBy(r => r.selectorTemplate).values().map(globalRules => {
+function reduceGlobalStyles(rules: ParsedRule[]): GlobalStyle[] {
+    return ld.chain(rules).groupBy(r => r.selector.template).values().map(globalRules => {
         let allDeps = new Set<string>()
         let allStyles: Style = {}
         for (const globalRule of globalRules) {
-            allDeps = new Set([...allDeps, ...globalRule.deps])
+            allDeps = new Set([...allDeps, ...globalRule.selector.deps])
             allStyles = {...allStyles, ...globalRule.styles}
         }
-        return new GlobalStyle(new VanillaSelectorMgr(globalRules[0].parts), allStyles, allDeps)
+        return new GlobalStyle(new VanillaSelectorMgr(globalRules[0].selector.parts), allStyles, allDeps)
     }).value()
 }
 
-function reduceRegularStyles(rules: VanillaRule[]): RegularStyle[] {
+function reduceRegularStyles(rules: ParsedRule[]): RegularStyle[] {
     return ld.chain(rules).groupBy((r) => {
-        return r.targetClass!
+        return r.selector.targetClass!
     }).values().map((regularRulesByVar) => {
         let allDeps = new Set<string>()
         for (const r of regularRulesByVar) {
-            allDeps = new Set([...allDeps, ...r.deps])
+            allDeps = new Set([...allDeps, ...r.selector.deps])
         }
         const selectorConfs: ISelectorConf[] = ld.chain(regularRulesByVar)
-            .groupBy(r => r.selectorTemplate)
+            .groupBy(r => r.selector.template)
             .values().map(regularRulesBySelector => {
                 let style: Style = {}
                 for (const r of regularRulesBySelector) {
                     style = {...style, ...r.styles}
                 }
                 return {
-                    vanillaSelector: new VanillaSelectorMgr(regularRulesBySelector[0].parts),
+                    vanillaSelector: new VanillaSelectorMgr(regularRulesBySelector[0].selector.parts),
                     style,
                 }
             }).value()
-        return new RegularStyle(regularRulesByVar[0].targetClass!, selectorConfs, allDeps)
+        return new RegularStyle(regularRulesByVar[0].selector.targetClass!, selectorConfs, allDeps)
     }).value()
 }
 

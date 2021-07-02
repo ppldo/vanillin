@@ -33,12 +33,14 @@ function parseSelectorInner(selector: Selector): Array<string | {
     return parts
 }
 
-export type VanillaSelector = {
+export type ParsedSelector = {
     targetClass: string | null
     parts: Array<string | { var: string }>
+    template: string
+    deps: Array<string>
 }
 
-const vanillaSelectorParser = selectorParser<VanillaSelector>(function (selectors): VanillaSelector {
+const vanillaSelectorParser = selectorParser<ParsedSelector>(function (selectors): ParsedSelector {
     if (selectors.length > 1)
         throw new Error('???')
     const selector = selectors.nodes[0]
@@ -67,9 +69,11 @@ const vanillaSelectorParser = selectorParser<VanillaSelector>(function (selector
     return {
         targetClass: parts.includes('&') ? targetClassNode?.value ?? null : null,
         parts,
+        template: parts.map(p => typeof p === 'string' ? p : '${' + p.var + '}').join(''),
+        deps: [...new Set(parts.flatMap(p => typeof p === 'object' ? [p.var] : []))],
     }
 })
 
-export function parseSelector(selector: string): VanillaSelector {
+export function parseSelector(selector: string): ParsedSelector {
     return vanillaSelectorParser.transformSync(selector)
 }
