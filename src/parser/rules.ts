@@ -10,7 +10,7 @@ export interface VanillaRule extends VanillaSelector {
     deps: Set<string>
 }
 
-interface IKeyFrame {
+interface IKeyFrames {
     varName: string
     data: Map<string, Style>
     isGlobal: boolean
@@ -19,7 +19,7 @@ interface IKeyFrame {
 export interface IParseRulesResult {
     globalRules: VanillaRule[]
     regularRules: VanillaRule[]
-    keyFrames: IKeyFrame[]
+    keyFrames: IKeyFrames[]
 }
 
 function parseCssProps(rule: Rule): Style {
@@ -33,7 +33,7 @@ function parseCssProps(rule: Rule): Style {
     return cssProp
 }
 
-function getKeyFrame(node: Rule, r: AtRule): IKeyFrame {
+function getKeyFrames(r: AtRule): IKeyFrames {
     let varName = r.params
     let isGlobal = false
     const res = r.params.match(/:global\(([^)]*)\)/)
@@ -43,9 +43,7 @@ function getKeyFrame(node: Rule, r: AtRule): IKeyFrame {
     }
     return {
         varName,
-        data: new Map([
-            [node.selector, parseCssProps(node)],
-        ]),
+        data: new Map(),
         isGlobal,
     }
 }
@@ -57,28 +55,19 @@ export function parseRules(root: Root): IParseRulesResult {
         keyFrames: [],
     }
 
-    const parsedKeyFrameName: string[] = []
     root.each(r => {
         if (r instanceof AtRule) {
             if (r.name === 'keyframes') {
-                r.nodes.map(node => {
-                    if (node instanceof Rule) {
-                        const keyFrame = getKeyFrame(node, r)
-                        if (!result.keyFrames.length) {
-                            parsedKeyFrameName.push(r.params)
-                            result.keyFrames.push(keyFrame)
-                        } else {
-                            for (const keyframe of result.keyFrames) {
-                                if (keyframe.varName === r.params) {
-                                    keyframe.data.set(node.selector, parseCssProps(node))
-                                } else if (!parsedKeyFrameName.includes(r.params)) {
-                                    parsedKeyFrameName.push(r.params)
-                                    result.keyFrames.push(keyFrame)
-                                }
-                            }
-                        }
-                    }
-                })
+                const keyFrames = getKeyFrames(r)
+                for (const node of r.nodes) {
+                    if (node instanceof Rule)
+                        keyFrames.data.set(node.selector, parseCssProps(node))
+                }
+                const index = result.keyFrames.findIndex(k => k.varName === keyFrames.varName)
+                if (index > -1)
+                    result.keyFrames[index] = keyFrames
+                else
+                    result.keyFrames.push(keyFrames)
             }
         } else if (r instanceof Rule) {
             for (const selector of r.selectors) {

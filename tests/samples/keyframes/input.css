@@ -23,6 +23,11 @@
 }
 
 @keyframes caret {
+    from {
+        color: red;
+    }
+}
+@keyframes caret {
   50% {
     border-color: transparent;
   }
