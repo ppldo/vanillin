@@ -1,6 +1,7 @@
 import {keyframes, style} from '@vanilla-extract/css'
 
-const shake = keyframes({
+//TODO: to avoid name conflict "Keyframes" was added
+const shakeKeyframes = keyframes({
     '10%, 90%': {
         transform: 'translate3d(-2px, 0, 0)',
     },
@@ -30,6 +31,7 @@ const doKeyframes = keyframes({
         borderColor: 'transparent',
     },
 })
+//TODO: JS keyword used as export name, transpiler can throw an error
 export {doKeyframes as do}
 export const shake = style({
     //TODO: local animation name interpolation is not implemented yet, please fix it yourself!

@@ -15,7 +15,7 @@
         "migration"
     ],
     "scripts": {
-        "test": "jest --coverage",
+        "test": "jest --coverage && tsc -P tests/tsconfig.json",
         "build": "rm -rf dist && yarn test && tsc",
         "prepublishOnly": "yarn build"
     },

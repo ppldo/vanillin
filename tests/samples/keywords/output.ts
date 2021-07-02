@@ -1,6 +1,7 @@
 import {style} from '@vanilla-extract/css'
 
 const doStyle = style({})
+//TODO: JS keyword used as export name, transpiler can throw an error
 export {doStyle as do}
 const forStyle = style({
     background: 'red',
@@ -10,6 +11,7 @@ const forStyle = style({
         }
     }
 })
+//TODO: JS keyword used as export name, transpiler can throw an error
 export {forStyle as for}
 export const SomePascal = style({
     color: 'red',

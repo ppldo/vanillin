@@ -3,7 +3,7 @@
     "include": [
         "./**/*.ts"
     ],
-    "exclude": [
-        "./samples/"
-    ],
+    "compilerOptions": {
+        "noEmit": true
+    }
 }

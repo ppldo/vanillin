@@ -117,18 +117,26 @@ function varDecl(varName: VariableNameAstMaker, expr: ts.Expression, withExport 
         'TODO: name was camelCased from ' + varName.dashed,
     )
 
-    return (!withExport || !varName.isReserved) ? [varStmt] : [
-        varStmt,
-        factory.createExportDeclaration(
-            undefined,
-            undefined,
-            false,
-            factory.createNamedExports([factory.createExportSpecifier(
-                factory.createIdentifier(varName.escapedName),
-                factory.createIdentifier(varName.rawName),
-            )]),
-        ),
-    ]
+    if (!withExport || !varName.isReserved)
+        return [varStmt]
+
+    const exportStmt = factory.createExportDeclaration(
+        undefined,
+        undefined,
+        false,
+        factory.createNamedExports([factory.createExportSpecifier(
+            factory.createIdentifier(varName.escapedName),
+            factory.createIdentifier(varName.rawName),
+        )]),
+    )
+
+    if (varName.isKeyword) ts.addSyntheticLeadingComment(
+        exportStmt,
+        SyntaxKind.SingleLineCommentTrivia,
+        'TODO: JS keyword used as export name, transpiler can throw an error',
+    )
+
+    return [varStmt, exportStmt]
 }
 
 export class CSSValueAstMaker {
@@ -335,16 +343,9 @@ export class VariableNameAstMaker {
         'void',
         'while',
         'yield',
-        //imports from vanilla-extract
-        'style',
-        'globalStyle',
-        'globalKeyframes',
-        'keyframes',
-        'fallbackVar',
-        'vars',
-        'composeStyles',
     ]
 
+    readonly isKeyword: boolean
     readonly isReserved: boolean
     readonly escapedName: string
     readonly rawName: string
@@ -358,7 +359,8 @@ export class VariableNameAstMaker {
             this.dashed = null
 
         this.rawName = rawName
-        this.isReserved = VariableNameAstMaker.keywordsList.includes(rawName)
+        this.isKeyword = VariableNameAstMaker.keywordsList.includes(rawName)
+        this.isReserved = this.isKeyword || FileMgr.possibleImports.includes(rawName as any)
         if (this.isReserved)
             this.escapedName = rawName + escapeSuffix
         else
@@ -477,14 +479,16 @@ export class KeyframeAstMaker {
     }
 
     private makeLocal() {
-        const name = new VariableNameAstMaker(this.keyFrame.varName, 'Keyframes')
+        let name = new VariableNameAstMaker(this.keyFrame.varName, 'Keyframes')
 
         const withExport = !this.file.hasExport(name.escapedName)
 
         if (withExport)
             this.file.export(name.escapedName)
+        else
+            name = new VariableNameAstMaker(name.escapedName + 'Keyframes')
 
-        return varDecl(
+        const nodes = varDecl(
             name,
             factory.createCallExpression(
                 factory.createIdentifier(this.file.importKeyframes()),
@@ -493,6 +497,14 @@ export class KeyframeAstMaker {
             ),
             withExport,
         )
+
+        if (!withExport) ts.addSyntheticLeadingComment(
+            nodes[0],
+            SyntaxKind.SingleLineCommentTrivia,
+            'TODO: to avoid name conflict "Keyframes" was added',
+        )
+
+        return nodes
     }
 
     private makeGlobal() {
@@ -506,8 +518,20 @@ export class KeyframeAstMaker {
     }
 }
 
+type VanillaImports = typeof FileMgr.possibleImports[number]
+
 export class FileMgr {
-    private vanilla = new Set<string>()
+    static possibleImports = [
+        'style',
+        'globalStyle',
+        'globalKeyframes',
+        'keyframes',
+        'fallbackVar',
+        'vars',
+        'composeStyles',
+    ] as const
+
+    private vanilla = new Set<VanillaImports>()
     private hasVars = false
     private exports = new Set<string>()
 
@@ -515,6 +539,11 @@ export class FileMgr {
         private readonly externalVars: Set<string>,
         private readonly varsImportPath: string,
     ) {
+    }
+
+    private import(str: VanillaImports) {
+        this.vanilla.add(str)
+        return str
     }
 
     getImports(): Array<{ importNames: string[], from: string }> {
@@ -570,11 +599,6 @@ export class FileMgr {
 
     hasExport(name: string) {
         return this.exports.has(name)
-    }
-
-    private import(str: string) {
-        this.vanilla.add(str)
-        return str
     }
 }
 

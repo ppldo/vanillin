@@ -23,7 +23,7 @@ export const three = composeStyles(one, two, style({
 }))
 
 //TODO composes: wrap from './tests/samples/pseudo/input.css'
-export const otherWrap = composeStyles(wrap, style({
+export const otherWrap = composeStyles('wrap', style({
     padding: '16px 8px'
 }))
 
